@@ -16,31 +16,8 @@
 #include "exchanges/gdax.h"
 #include "utils/send_email.h"
 #include "unistd.h"
+#include "utils/utils.h"
 
-// The 'typedef' declarations needed for the function arrays
-// These functions contain everything needed to communicate with
-// the exchanges, like getting the quotes or the active positions.
-// Each function is implemented in the files located in the 'exchanges' folder.
-typedef quote_t     (*getQuoteType)(Parameters &params);
-
-typedef double      (*getAvailType)(Parameters &params, std::string currency);
-
-typedef std::string (*sendOrderType)(Parameters &params, std::string direction, double quantity, double price);
-
-typedef bool        (*isOrderCompleteType)(Parameters &params, std::string orderId);
-
-typedef double      (*getActivePosType)(Parameters &params);
-
-typedef double      (*getLimitPriceType)(Parameters &params, double volume, bool isBid);
-
-// This structure contains the balance of both exchanges,
-// *before* and *after* an arbitrage trade.
-// This is used to compute the performance of the trade,
-// by comparing the balance before and after the trade.
-struct Balance {
-    double leg1, leg2;
-    double leg1After, leg2After;
-};
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
