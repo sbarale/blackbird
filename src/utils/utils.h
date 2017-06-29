@@ -11,6 +11,8 @@
 
 using namespace std;
 
+// TODO: These methods will dissapear once we move everything into classes instead of namespaces.
+
 // The 'typedef' declarations needed for the function arrays
 // These functions contain everything needed to communicate with
 // the exchanges, like getting the quotes or the active positions.
