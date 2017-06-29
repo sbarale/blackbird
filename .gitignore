@@ -14,4 +14,4 @@ blackbird_CXX_cotire.cmake
 cmake-build-debug/
 cmake_install.cmake
 cotire/
-
+blackbird.cbp
