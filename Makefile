@@ -296,33 +296,6 @@ src/db_fun.cpp.s:
 	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/db_fun.cpp.s
 .PHONY : src/db_fun.cpp.s
 
-src/exchange.o: src/exchange.cpp.o
-
-.PHONY : src/exchange.o
-
-# target to build an object file
-src/exchange.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchange.cpp.o
-.PHONY : src/exchange.cpp.o
-
-src/exchange.i: src/exchange.cpp.i
-
-.PHONY : src/exchange.i
-
-# target to preprocess a source file
-src/exchange.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchange.cpp.i
-.PHONY : src/exchange.cpp.i
-
-src/exchange.s: src/exchange.cpp.s
-
-.PHONY : src/exchange.s
-
-# target to generate assembly for a file
-src/exchange.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchange.cpp.s
-.PHONY : src/exchange.cpp.s
-
 src/exchanges/bitfinex.o: src/exchanges/bitfinex.cpp.o
 
 .PHONY : src/exchanges/bitfinex.o
@@ -403,6 +376,33 @@ src/exchanges/btce.s: src/exchanges/btce.cpp.s
 src/exchanges/btce.cpp.s:
 	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/btce.cpp.s
 .PHONY : src/exchanges/btce.cpp.s
+
+src/exchanges/exchange.o: src/exchanges/exchange.cpp.o
+
+.PHONY : src/exchanges/exchange.o
+
+# target to build an object file
+src/exchanges/exchange.cpp.o:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/exchange.cpp.o
+.PHONY : src/exchanges/exchange.cpp.o
+
+src/exchanges/exchange.i: src/exchanges/exchange.cpp.i
+
+.PHONY : src/exchanges/exchange.i
+
+# target to preprocess a source file
+src/exchanges/exchange.cpp.i:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/exchange.cpp.i
+.PHONY : src/exchanges/exchange.cpp.i
+
+src/exchanges/exchange.s: src/exchanges/exchange.cpp.s
+
+.PHONY : src/exchanges/exchange.s
+
+# target to generate assembly for a file
+src/exchanges/exchange.cpp.s:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/exchange.cpp.s
+.PHONY : src/exchanges/exchange.cpp.s
 
 src/exchanges/gdax.o: src/exchanges/gdax.cpp.o
 
@@ -781,9 +781,6 @@ help:
 	@echo "... src/db_fun.o"
 	@echo "... src/db_fun.i"
 	@echo "... src/db_fun.s"
-	@echo "... src/exchange.o"
-	@echo "... src/exchange.i"
-	@echo "... src/exchange.s"
 	@echo "... src/exchanges/bitfinex.o"
 	@echo "... src/exchanges/bitfinex.i"
 	@echo "... src/exchanges/bitfinex.s"
@@ -793,6 +790,9 @@ help:
 	@echo "... src/exchanges/btce.o"
 	@echo "... src/exchanges/btce.i"
 	@echo "... src/exchanges/btce.s"
+	@echo "... src/exchanges/exchange.o"
+	@echo "... src/exchanges/exchange.i"
+	@echo "... src/exchanges/exchange.s"
 	@echo "... src/exchanges/gdax.o"
 	@echo "... src/exchanges/gdax.i"
 	@echo "... src/exchanges/gdax.s"
