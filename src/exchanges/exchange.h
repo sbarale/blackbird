@@ -19,23 +19,14 @@ class Exchange {
 
   public:
     Exchange(unsigned id, std::string n, double f, bool h, bool m);
-
     void updateData(quote_t quote);
-
     unsigned getId() const;
-
     double getAsk() const;
-
     double getBid() const;
-
     double getMidPrice() const;
-
     std::string getExchName() const;
-
     double getFees() const;
-
     bool getHasShort() const;
-
     bool getIsImplemented() const;
 };
 

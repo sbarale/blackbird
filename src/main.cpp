@@ -17,7 +17,9 @@
 #include "utils/send_email.h"
 #include "unistd.h"
 #include "utils/utils.h"
+#include <iomanip>
 
+void loadExchanges(const Parameters &params, int numExch, vector<Exchange, allocator<Exchange>> &exchanges);
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
@@ -84,11 +86,12 @@ int main(int argc, char **argv) {
     // deal with USD.
     // TODO: should be in a separated function, and there probably is a better
     // way to implement that.
-    int index = 0;
+    int                 index = 0;
     if (params.bitfinexEnable &&
         (params.bitfinexApi.empty() == false ||
          (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
         params.addExchange("Bitfinex", params.bitfinexFees, true, true);
+
         getQuote[index]        = Bitfinex::getQuote;
         getAvail[index]        = Bitfinex::getAvail;
         sendLongOrder[index]   = Bitfinex::sendLongOrder;
@@ -97,7 +100,7 @@ int main(int argc, char **argv) {
         getActivePos[index]    = Bitfinex::getActivePos;
         getLimitPrice[index]   = Bitfinex::getLimitPrice;
 
-        dbTableName[index] = "bitfinex";
+        dbTableName[index]     = "bitfinex";
         createTable(dbTableName[index], params);
 
         index++;
@@ -114,7 +117,7 @@ int main(int argc, char **argv) {
         getActivePos[index]    = OKCoin::getActivePos;
         getLimitPrice[index]   = OKCoin::getLimitPrice;
 
-        dbTableName[index] = "okcoin";
+        dbTableName[index]     = "okcoin";
         createTable(dbTableName[index], params);
 
         index++;
@@ -130,7 +133,7 @@ int main(int argc, char **argv) {
         getActivePos[index]    = Bitstamp::getActivePos;
         getLimitPrice[index]   = Bitstamp::getLimitPrice;
 
-        dbTableName[index] = "bitstamp";
+        dbTableName[index]     = "bitstamp";
         createTable(dbTableName[index], params);
 
         index++;
@@ -145,7 +148,7 @@ int main(int argc, char **argv) {
         getActivePos[index]    = Gemini::getActivePos;
         getLimitPrice[index]   = Gemini::getLimitPrice;
 
-        dbTableName[index] = "gemini";
+        dbTableName[index]     = "gemini";
         createTable(dbTableName[index], params);
 
         index++;
@@ -161,7 +164,7 @@ int main(int argc, char **argv) {
         getActivePos[index]    = Kraken::getActivePos;
         getLimitPrice[index]   = Kraken::getLimitPrice;
 
-        dbTableName[index] = "kraken";
+        dbTableName[index]     = "kraken";
         createTable(dbTableName[index], params);
 
         index++;
@@ -175,7 +178,7 @@ int main(int argc, char **argv) {
         getActivePos[index]  = ItBit::getActivePos;
         getLimitPrice[index] = ItBit::getLimitPrice;
 
-        dbTableName[index] = "itbit";
+        dbTableName[index]   = "itbit";
         createTable(dbTableName[index], params);
 
         index++;
@@ -188,7 +191,7 @@ int main(int argc, char **argv) {
         getActivePos[index]  = BTCe::getActivePos;
         getLimitPrice[index] = BTCe::getLimitPrice;
 
-        dbTableName[index] = "btce";
+        dbTableName[index]   = "btce";
         createTable(dbTableName[index], params);
 
         index++;
@@ -205,7 +208,7 @@ int main(int argc, char **argv) {
         getActivePos[index]    = Poloniex::getActivePos;
         getLimitPrice[index]   = Poloniex::getLimitPrice;
 
-        dbTableName[index] = "poloniex";
+        dbTableName[index]     = "poloniex";
         createTable(dbTableName[index], params);
 
         index++;
@@ -218,7 +221,7 @@ int main(int argc, char **argv) {
         getActivePos[index]  = GDAX::getActivePos;
         getLimitPrice[index] = GDAX::getLimitPrice;
 
-        dbTableName[index] = "gdax";
+        dbTableName[index]   = "gdax";
         createTable(dbTableName[index], params);
 
         index++;
@@ -262,14 +265,11 @@ int main(int argc, char **argv) {
     std::cout << "Log file generated: " << logFileName << "\nBlackbird is running... (pid " << getpid() << ")\n"
               << std::endl;
     int                   numExch = params.nbExch();
-    // The btcVec vector contains details about every exchange,
-    // like fees, as specified in bitcoin.h
+
+    // The exchanges vector contains details about every exchange,
+    // like fees, as specified in exchanges.h
     std::vector<Exchange> exchanges;
-    exchanges.reserve(numExch);
-    // Creates a new Bitcoin structure within btcVec for every exchange we want to trade on
-    for (int i = 0; i < numExch; ++i) {
-        exchanges.push_back(Exchange(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
-    }
+    loadExchanges(params, numExch, exchanges);
 
     // Inits cURL connections
     params.curl = curl_easy_init();
@@ -304,12 +304,12 @@ int main(int argc, char **argv) {
 
     // Checks for a restore.txt file, to see if
     // the program exited with an open position.
-    Result res;
+    Result               res;
     res.reset();
-    bool inMarket = res.loadPartialResult("restore.txt");
+    bool     inMarket = res.loadPartialResult("restore.txt");
 
     // Writes the current balances into the log file
-    for (int i = 0; i < numExch; ++i) {
+    for (int i        = 0; i < numExch; ++i) {
         logFile << "   " << params.exchName[i] << ":\t";
         if (params.demoMode) {
             logFile << "n/a (demo mode)" << std::endl;
@@ -364,7 +364,7 @@ int main(int argc, char **argv) {
     while (stillRunning) {
         currTime = mktime(&timeinfo);
         time(&rawtime);
-        diffTime = difftime(rawtime, currTime);
+        diffTime   = difftime(rawtime, currTime);
         // Checks if we are already too late in the current iteration
         // If that's the case we wait until the next iteration
         // and we show a warning in the log file.
@@ -703,4 +703,13 @@ int main(int argc, char **argv) {
     logFile.close();
 
     return 0;
+}
+
+void loadExchanges(const Parameters &params, int numExch, vector<Exchange, allocator<Exchange>> &exchanges) {
+    exchanges.reserve(numExch);
+    // Creates a new Bitcoin structure within exchanges for every exchange we want to trade on
+    for (int i = 0; i < numExch; ++i) {
+        exchanges.push_back(
+                Exchange(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
+    }
 }
