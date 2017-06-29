@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
   }
   if (params.okcoinEnable &&
      (params.okcoinApi.empty() == false || (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-    params.addExchange("OKCoin", params.okcoinFees, false, true);
+    params.addExchange("OKCoin", params.okcoinFees, true, true);
     getQuote[index] = OKCoin::getQuote;
     getAvail[index] = OKCoin::getAvail;
     sendLongOrder[index] = OKCoin::sendLongOrder;
