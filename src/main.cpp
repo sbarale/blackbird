@@ -1,4 +1,4 @@
-#include "bitcoin.h"
+#include "exchange.h"
 #include "result.h"
 #include "time_fun.h"
 #include "curl_fun.h"
@@ -283,11 +283,11 @@ int main(int argc, char** argv) {
   int numExch = params.nbExch();
   // The btcVec vector contains details about every exchange,
   // like fees, as specified in bitcoin.h
-  std::vector<Bitcoin> btcVec;
+  std::vector<Exchange> btcVec;
   btcVec.reserve(numExch);
   // Creates a new Bitcoin structure within btcVec for every exchange we want to trade on
   for (int i = 0; i < numExch; ++i) {
-    btcVec.push_back(Bitcoin(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
+    btcVec.push_back(Exchange(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
   }
 
   // Inits cURL connections
