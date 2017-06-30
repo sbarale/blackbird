@@ -377,221 +377,32 @@ src/exchanges/bitstamp.cpp.s:
 	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/bitstamp.cpp.s
 .PHONY : src/exchanges/bitstamp.cpp.s
 
-src/exchanges/btce.o: src/exchanges/btce.cpp.o
+src/exchanges/coin.o: src/exchanges/coin.cpp.o
 
-.PHONY : src/exchanges/btce.o
-
-# target to build an object file
-src/exchanges/btce.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/btce.cpp.o
-.PHONY : src/exchanges/btce.cpp.o
-
-src/exchanges/btce.i: src/exchanges/btce.cpp.i
-
-.PHONY : src/exchanges/btce.i
-
-# target to preprocess a source file
-src/exchanges/btce.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/btce.cpp.i
-.PHONY : src/exchanges/btce.cpp.i
-
-src/exchanges/btce.s: src/exchanges/btce.cpp.s
-
-.PHONY : src/exchanges/btce.s
-
-# target to generate assembly for a file
-src/exchanges/btce.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/btce.cpp.s
-.PHONY : src/exchanges/btce.cpp.s
-
-src/exchanges/exchange.o: src/exchanges/exchange.cpp.o
-
-.PHONY : src/exchanges/exchange.o
+.PHONY : src/exchanges/coin.o
 
 # target to build an object file
-src/exchanges/exchange.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/exchange.cpp.o
-.PHONY : src/exchanges/exchange.cpp.o
+src/exchanges/coin.cpp.o:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/coin.cpp.o
+.PHONY : src/exchanges/coin.cpp.o
 
-src/exchanges/exchange.i: src/exchanges/exchange.cpp.i
+src/exchanges/coin.i: src/exchanges/coin.cpp.i
 
-.PHONY : src/exchanges/exchange.i
-
-# target to preprocess a source file
-src/exchanges/exchange.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/exchange.cpp.i
-.PHONY : src/exchanges/exchange.cpp.i
-
-src/exchanges/exchange.s: src/exchanges/exchange.cpp.s
-
-.PHONY : src/exchanges/exchange.s
-
-# target to generate assembly for a file
-src/exchanges/exchange.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/exchange.cpp.s
-.PHONY : src/exchanges/exchange.cpp.s
-
-src/exchanges/gdax.o: src/exchanges/gdax.cpp.o
-
-.PHONY : src/exchanges/gdax.o
-
-# target to build an object file
-src/exchanges/gdax.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/gdax.cpp.o
-.PHONY : src/exchanges/gdax.cpp.o
-
-src/exchanges/gdax.i: src/exchanges/gdax.cpp.i
-
-.PHONY : src/exchanges/gdax.i
+.PHONY : src/exchanges/coin.i
 
 # target to preprocess a source file
-src/exchanges/gdax.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/gdax.cpp.i
-.PHONY : src/exchanges/gdax.cpp.i
+src/exchanges/coin.cpp.i:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/coin.cpp.i
+.PHONY : src/exchanges/coin.cpp.i
 
-src/exchanges/gdax.s: src/exchanges/gdax.cpp.s
+src/exchanges/coin.s: src/exchanges/coin.cpp.s
 
-.PHONY : src/exchanges/gdax.s
-
-# target to generate assembly for a file
-src/exchanges/gdax.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/gdax.cpp.s
-.PHONY : src/exchanges/gdax.cpp.s
-
-src/exchanges/gemini.o: src/exchanges/gemini.cpp.o
-
-.PHONY : src/exchanges/gemini.o
-
-# target to build an object file
-src/exchanges/gemini.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/gemini.cpp.o
-.PHONY : src/exchanges/gemini.cpp.o
-
-src/exchanges/gemini.i: src/exchanges/gemini.cpp.i
-
-.PHONY : src/exchanges/gemini.i
-
-# target to preprocess a source file
-src/exchanges/gemini.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/gemini.cpp.i
-.PHONY : src/exchanges/gemini.cpp.i
-
-src/exchanges/gemini.s: src/exchanges/gemini.cpp.s
-
-.PHONY : src/exchanges/gemini.s
+.PHONY : src/exchanges/coin.s
 
 # target to generate assembly for a file
-src/exchanges/gemini.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/gemini.cpp.s
-.PHONY : src/exchanges/gemini.cpp.s
-
-src/exchanges/itbit.o: src/exchanges/itbit.cpp.o
-
-.PHONY : src/exchanges/itbit.o
-
-# target to build an object file
-src/exchanges/itbit.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/itbit.cpp.o
-.PHONY : src/exchanges/itbit.cpp.o
-
-src/exchanges/itbit.i: src/exchanges/itbit.cpp.i
-
-.PHONY : src/exchanges/itbit.i
-
-# target to preprocess a source file
-src/exchanges/itbit.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/itbit.cpp.i
-.PHONY : src/exchanges/itbit.cpp.i
-
-src/exchanges/itbit.s: src/exchanges/itbit.cpp.s
-
-.PHONY : src/exchanges/itbit.s
-
-# target to generate assembly for a file
-src/exchanges/itbit.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/itbit.cpp.s
-.PHONY : src/exchanges/itbit.cpp.s
-
-src/exchanges/kraken.o: src/exchanges/kraken.cpp.o
-
-.PHONY : src/exchanges/kraken.o
-
-# target to build an object file
-src/exchanges/kraken.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/kraken.cpp.o
-.PHONY : src/exchanges/kraken.cpp.o
-
-src/exchanges/kraken.i: src/exchanges/kraken.cpp.i
-
-.PHONY : src/exchanges/kraken.i
-
-# target to preprocess a source file
-src/exchanges/kraken.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/kraken.cpp.i
-.PHONY : src/exchanges/kraken.cpp.i
-
-src/exchanges/kraken.s: src/exchanges/kraken.cpp.s
-
-.PHONY : src/exchanges/kraken.s
-
-# target to generate assembly for a file
-src/exchanges/kraken.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/kraken.cpp.s
-.PHONY : src/exchanges/kraken.cpp.s
-
-src/exchanges/okcoin.o: src/exchanges/okcoin.cpp.o
-
-.PHONY : src/exchanges/okcoin.o
-
-# target to build an object file
-src/exchanges/okcoin.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/okcoin.cpp.o
-.PHONY : src/exchanges/okcoin.cpp.o
-
-src/exchanges/okcoin.i: src/exchanges/okcoin.cpp.i
-
-.PHONY : src/exchanges/okcoin.i
-
-# target to preprocess a source file
-src/exchanges/okcoin.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/okcoin.cpp.i
-.PHONY : src/exchanges/okcoin.cpp.i
-
-src/exchanges/okcoin.s: src/exchanges/okcoin.cpp.s
-
-.PHONY : src/exchanges/okcoin.s
-
-# target to generate assembly for a file
-src/exchanges/okcoin.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/okcoin.cpp.s
-.PHONY : src/exchanges/okcoin.cpp.s
-
-src/exchanges/poloniex.o: src/exchanges/poloniex.cpp.o
-
-.PHONY : src/exchanges/poloniex.o
-
-# target to build an object file
-src/exchanges/poloniex.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/poloniex.cpp.o
-.PHONY : src/exchanges/poloniex.cpp.o
-
-src/exchanges/poloniex.i: src/exchanges/poloniex.cpp.i
-
-.PHONY : src/exchanges/poloniex.i
-
-# target to preprocess a source file
-src/exchanges/poloniex.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/poloniex.cpp.i
-.PHONY : src/exchanges/poloniex.cpp.i
-
-src/exchanges/poloniex.s: src/exchanges/poloniex.cpp.s
-
-.PHONY : src/exchanges/poloniex.s
-
-# target to generate assembly for a file
-src/exchanges/poloniex.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/poloniex.cpp.s
-.PHONY : src/exchanges/poloniex.cpp.s
+src/exchanges/coin.cpp.s:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/coin.cpp.s
+.PHONY : src/exchanges/coin.cpp.s
 
 src/main.o: src/main.cpp.o
 
@@ -817,30 +628,9 @@ help:
 	@echo "... src/exchanges/bitstamp.o"
 	@echo "... src/exchanges/bitstamp.i"
 	@echo "... src/exchanges/bitstamp.s"
-	@echo "... src/exchanges/btce.o"
-	@echo "... src/exchanges/btce.i"
-	@echo "... src/exchanges/btce.s"
-	@echo "... src/exchanges/exchange.o"
-	@echo "... src/exchanges/exchange.i"
-	@echo "... src/exchanges/exchange.s"
-	@echo "... src/exchanges/gdax.o"
-	@echo "... src/exchanges/gdax.i"
-	@echo "... src/exchanges/gdax.s"
-	@echo "... src/exchanges/gemini.o"
-	@echo "... src/exchanges/gemini.i"
-	@echo "... src/exchanges/gemini.s"
-	@echo "... src/exchanges/itbit.o"
-	@echo "... src/exchanges/itbit.i"
-	@echo "... src/exchanges/itbit.s"
-	@echo "... src/exchanges/kraken.o"
-	@echo "... src/exchanges/kraken.i"
-	@echo "... src/exchanges/kraken.s"
-	@echo "... src/exchanges/okcoin.o"
-	@echo "... src/exchanges/okcoin.i"
-	@echo "... src/exchanges/okcoin.s"
-	@echo "... src/exchanges/poloniex.o"
-	@echo "... src/exchanges/poloniex.i"
-	@echo "... src/exchanges/poloniex.s"
+	@echo "... src/exchanges/coin.o"
+	@echo "... src/exchanges/coin.i"
+	@echo "... src/exchanges/coin.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

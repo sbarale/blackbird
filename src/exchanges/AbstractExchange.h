@@ -1,7 +1,3 @@
-//
-// Created by Macbook on 6/29/17.
-//
-
 #ifndef BLACKBIRD_ABSTRACTEXCHANGE_H
 #define BLACKBIRD_ABSTRACTEXCHANGE_H
 
@@ -13,35 +9,26 @@
 
 class AbstractExchange {
   public:
-    static RestApi &queryHandle(Parameters &params) {
-        static RestApi query(api_url,
-                             params.cacert.c_str(),
-                             *params.logFile
-        );
-        return query;
-    }
+    std::string api_url;
+    std::string exchange_name;
 
-    static json_t *checkResponse(std::ostream &logFile, json_t *root) {
-        auto msg = json_object_get(root, "message");
-        if (msg) {
-            logFile << "<Bitfinex> Error with response: "
-                    << json_string_value(msg) << '\n';
-        }
-        return root;
-    }
+    AbstractExchange();
+    ~AbstractExchange();
 
-    static std::__1::string sendOrder(Parameters &params, std::__1::string direction, double quantity, double price);
-    static json_t *authRequest(Parameters &params, std::__1::string request, std::__1::string options);
-    static double getActivePos(Parameters &params);
-    static double getAvail(Parameters &params, std::__1::string currency);
-    static double getLimitPrice(Parameters &params, double volume, bool isBid);
-    static quote_t getQuote(Parameters &params);
-    static bool isOrderComplete(Parameters &params, std::__1::string orderId);
-    static std::__1::string
+    virtual RestApi &queryHandle(Parameters &params);
+    virtual json_t *checkResponse(std::ostream &logFile, json_t *root);
+    virtual json_t *authRequest(Parameters &params, std::__1::string request, std::__1::string options);
+    virtual double getActivePos(Parameters &params);
+    virtual double getAvail(Parameters &params, std::__1::string currency);
+    virtual double getLimitPrice(Parameters &params, double volume, bool isBid);
+    virtual quote_t getQuote(Parameters &params);
+    virtual bool isOrderComplete(Parameters &params, std::__1::string orderId);
+    virtual std::__1::string
     sendLongOrder(Parameters &params, std::__1::string direction, double quantity, double price);
-    static std::__1::string
+    virtual std::__1::string
     sendShortOrder(Parameters &params, std::__1::string direction, double quantity, double price);
-    static std::string api_url;
+    virtual std::__1::string sendOrder(Parameters &params, std::__1::string direction, double quantity, double price);
+
 };
 
 #endif //BLACKBIRD_ABSTRACTEXCHANGE_H

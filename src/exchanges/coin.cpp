@@ -1,7 +1,7 @@
-#include "exchange.h"
+#include "coin.h"
 #include <cmath>
 
-Exchange::Exchange(unsigned i, std::string n, double f, bool h, bool m) {
+Coin::Coin(unsigned i, std::string n, double f, bool h, bool m) {
     id            = i;
     exchName      = n;
     fees          = f;
@@ -11,24 +11,24 @@ Exchange::Exchange(unsigned i, std::string n, double f, bool h, bool m) {
     ask           = 0.0;
 }
 
-void Exchange::updateData(quote_t quote) {
+void Coin::updateData(quote_t quote) {
     bid = quote.bid();
     ask = quote.ask();
 }
 
-unsigned Exchange::getId() const {
+unsigned Coin::getId() const {
     return id;
 }
 
-double Exchange::getBid() const {
+double Coin::getBid() const {
     return bid;
 }
 
-double Exchange::getAsk() const {
+double Coin::getAsk() const {
     return ask;
 }
 
-double Exchange::getMidPrice() const {
+double Coin::getMidPrice() const {
     if (bid > 0.0 && ask > 0.0) {
         return (bid + ask) / 2.0;
     } else {
@@ -36,18 +36,18 @@ double Exchange::getMidPrice() const {
     }
 }
 
-std::string Exchange::getExchName() const {
+std::string Coin::getExchName() const {
     return exchName;
 }
 
-double Exchange::getFees() const {
+double Coin::getFees() const {
     return fees;
 }
 
-bool Exchange::getHasShort() const {
+bool Coin::getHasShort() const {
     return hasShort;
 }
 
-bool Exchange::getIsImplemented() const {
+bool Coin::getIsImplemented() const {
     return isImplemented;
 }

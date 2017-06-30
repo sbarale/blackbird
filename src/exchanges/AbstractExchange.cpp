@@ -11,9 +11,25 @@
 #include "parameters.h"
 #include "AbstractExchange.h"
 
-std::string AbstractExchange::api_url = "https://api.bitfinex.com";
+/*
+ * TODO: This is NOT PROPER CODE STRUCTURE. This is temporary to go through the
+ *       refactoring process w/o that much pain
+ */
+
+
+AbstractExchange::AbstractExchange() {
+    exchange_name = "Abstract";
+    api_url       = "DAFUK";
+    std::cout << "Init " << exchange_name << std::endl;
+}
+
+AbstractExchange::~AbstractExchange() {
+
+}
 
 quote_t AbstractExchange::getQuote(Parameters &params) {
+
+    std::cout << "Calling getQuote() in AbstractExchange class for " << exchange_name << std::endl;
     auto             &exchange = queryHandle(params);
 
     // Added to handle ethbtc on bitfinex
@@ -161,4 +177,22 @@ json_t *AbstractExchange::authRequest(Parameters &params, std::__1::string reque
     auto             root      = exchange.postRequest(request,
                                                       make_slist(begin(headers), end(headers)));
     return checkResponse(*params.logFile, root);
+}
+
+RestApi &AbstractExchange::queryHandle(Parameters &params) {
+    std::cout << "Calling queryHandle in " << exchange_name << std::endl;
+    static RestApi query(api_url,
+                         params.cacert.c_str(),
+                         *params.logFile
+    );
+    return query;
+}
+
+json_t *AbstractExchange::checkResponse(std::ostream &logFile, json_t *root) {
+    auto msg = json_object_get(root, "message");
+    if (msg) {
+        logFile << "<AbstractExchange> Error with response: "
+                << json_string_value(msg) << '\n';
+    }
+    return root;
 }

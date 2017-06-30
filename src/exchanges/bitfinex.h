@@ -3,12 +3,9 @@
 
 #include "AbstractExchange.h"
 
-struct json_t;
-struct Parameters;
-
 class Bitfinex : public AbstractExchange {
   public:
-    static std::string api_url;
+    Bitfinex();
 };
 
 #endif

@@ -1,4 +1,4 @@
-#include "exchanges/exchange.h"
+#include "exchanges/coin.h"
 #include "result.h"
 #include "time_fun.h"
 #include "curl_fun.h"
@@ -6,20 +6,15 @@
 #include "parameters.h"
 #include "check_entry_exit.h"
 #include "exchanges/bitfinex.h"
-#include "exchanges/okcoin.h"
 #include "exchanges/bitstamp.h"
-#include "exchanges/gemini.h"
-#include "exchanges/kraken.h"
-#include "exchanges/itbit.h"
-#include "exchanges/btce.h"
-#include "exchanges/poloniex.h"
-#include "exchanges/gdax.h"
 #include "utils/send_email.h"
 #include "unistd.h"
 #include "utils/utils.h"
 #include <iomanip>
+#include <thread>
+#include <math.h>
 
-void loadExchanges(const Parameters &params, int numExch, vector<Exchange, allocator<Exchange>> &exchanges);
+void loadExchanges(const Parameters &params, int numExch, vector<Coin, allocator<Coin>> &exchanges);
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
@@ -34,7 +29,7 @@ int main(int argc, char **argv) {
     if (!params.demoMode) {
         if (!params.useFullExposure) {
             if (params.testedExposure < 10.0 && params.leg2.compare("USD") == 0) {
-                // TODO do the same check for other currencies. Is there a limi?
+                // TODO do the same check for other currencies. Is there a limit ?
                 std::cout << "ERROR: Minimum USD needed: $10.00" << std::endl;
                 std::cout << "       Otherwise some exchanges will reject the orders\n" << std::endl;
                 exit(EXIT_FAILURE);
@@ -64,168 +59,55 @@ int main(int argc, char **argv) {
     }
 
     // ETH/BTC is not fully implemented yet, but the spreads are shown in Demo mode
-    if (params.tradedPair().compare("ETH/BTC") == 0 && params.demoMode == false) {
+    if (params.tradedPair().compare("ETH/BTC") == 0 && !params.demoMode == false) {
         std::cout << "ERROR: ETH/BTC is only available in Demo mode\n" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     // Function arrays containing all the exchanges functions
     // using the 'typedef' declarations from above.
-    getQuoteType        getQuote[10];
-    getAvailType        getAvail[10];
-    sendOrderType       sendLongOrder[10];
-    sendOrderType       sendShortOrder[10];
-    isOrderCompleteType isOrderComplete[10];
-    getActivePosType    getActivePos[10];
-    getLimitPriceType   getLimitPrice[10];
-    std::string         dbTableName[10];
-
+    //getQuoteType                  getQuote[10];
+    //getAvailType                  getAvail[10];
+    //sendOrderType                 sendLongOrder[10];
+    //sendOrderType                 sendShortOrder[10];
+    //isOrderCompleteType           isOrderComplete[10];
+    //getActivePosType              getActivePos[10];
+    //getLimitPriceType             getLimitPrice[10];
+    std::string                     dbTableName[10];
+    std::vector<AbstractExchange *> pool;
 
     // Adds the exchange functions to the arrays for all the defined exchanges
     // Poloniex is only used if the traded pair is ETH/BTC as they don't
     // deal with USD.
     // TODO: should be in a separated function, and there probably is a better
     // way to implement that.
-    int                 index = 0;
+    int                             index = 0;
     if (params.bitfinexEnable &&
         (params.bitfinexApi.empty() == false ||
          (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
         params.addExchange("Bitfinex", params.bitfinexFees, true, true);
 
-        getQuote[index]        = Bitfinex::getQuote;
-        getAvail[index]        = Bitfinex::getAvail;
-        sendLongOrder[index]   = Bitfinex::sendLongOrder;
-        sendShortOrder[index]  = Bitfinex::sendShortOrder;
-        isOrderComplete[index] = Bitfinex::isOrderComplete;
-        getActivePos[index]    = Bitfinex::getActivePos;
-        getLimitPrice[index]   = Bitfinex::getLimitPrice;
+        pool.push_back(new Bitfinex);
 
-        dbTableName[index]     = "bitfinex";
+        // TODO: All this is irrelevant. Use directly function calls in the loop
+        dbTableName[index] = "bitfinex";
         createTable(dbTableName[index], params);
 
         index++;
     }
-    if (params.okcoinEnable &&
-        (params.okcoinApi.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("OKCoin", params.okcoinFees, true, true);
-        getQuote[index]        = OKCoin::getQuote;
-        getAvail[index]        = OKCoin::getAvail;
-        sendLongOrder[index]   = OKCoin::sendLongOrder;
-        sendShortOrder[index]  = OKCoin::sendShortOrder;
-        isOrderComplete[index] = OKCoin::isOrderComplete;
-        getActivePos[index]    = OKCoin::getActivePos;
-        getLimitPrice[index]   = OKCoin::getLimitPrice;
 
-        dbTableName[index]     = "okcoin";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
     if (params.bitstampEnable &&
         (params.bitstampClientId.empty() == false ||
          (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
         params.addExchange("Bitstamp", params.bitstampFees, false, true);
-        getQuote[index]        = Bitstamp::getQuote;
-        getAvail[index]        = Bitstamp::getAvail;
-        sendLongOrder[index]   = Bitstamp::sendLongOrder;
-        isOrderComplete[index] = Bitstamp::isOrderComplete;
-        getActivePos[index]    = Bitstamp::getActivePos;
-        getLimitPrice[index]   = Bitstamp::getLimitPrice;
 
-        dbTableName[index]     = "bitstamp";
+        pool.push_back(new Bitstamp);
+        dbTableName[index] = "bitstamp";
         createTable(dbTableName[index], params);
 
         index++;
     }
-    if (params.geminiEnable &&
-        (params.geminiApi.empty() == false || params.demoMode == true)) {
-        params.addExchange("Gemini", params.geminiFees, false, true);
-        getQuote[index]        = Gemini::getQuote;
-        getAvail[index]        = Gemini::getAvail;
-        sendLongOrder[index]   = Gemini::sendLongOrder;
-        isOrderComplete[index] = Gemini::isOrderComplete;
-        getActivePos[index]    = Gemini::getActivePos;
-        getLimitPrice[index]   = Gemini::getLimitPrice;
 
-        dbTableName[index]     = "gemini";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
-    if (params.krakenEnable &&
-        (params.krakenApi.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("Kraken", params.krakenFees, false, true);
-        getQuote[index]        = Kraken::getQuote;
-        getAvail[index]        = Kraken::getAvail;
-        sendLongOrder[index]   = Kraken::sendLongOrder;
-        isOrderComplete[index] = Kraken::isOrderComplete;
-        getActivePos[index]    = Kraken::getActivePos;
-        getLimitPrice[index]   = Kraken::getLimitPrice;
-
-        dbTableName[index]     = "kraken";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
-    if (params.itbitEnable &&
-        (params.itbitApi.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("ItBit", params.itbitFees, false, false);
-        getQuote[index]      = ItBit::getQuote;
-        getAvail[index]      = ItBit::getAvail;
-        getActivePos[index]  = ItBit::getActivePos;
-        getLimitPrice[index] = ItBit::getLimitPrice;
-
-        dbTableName[index]   = "itbit";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
-    if (params.btceEnable &&
-        (params.btceApi.empty() == false || (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("BTC-e", params.btceFees, false, false);
-        getQuote[index]      = BTCe::getQuote;
-        getAvail[index]      = BTCe::getAvail;
-        getActivePos[index]  = BTCe::getActivePos;
-        getLimitPrice[index] = BTCe::getLimitPrice;
-
-        dbTableName[index]   = "btce";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
-    if (params.poloniexEnable &&
-        (params.poloniexApi.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("ETH/BTC") == 0))) {
-        params.addExchange("Poloniex", params.poloniexFees, true, false);
-        getQuote[index]        = Poloniex::getQuote;
-        getAvail[index]        = Poloniex::getAvail;
-        sendLongOrder[index]   = Poloniex::sendLongOrder;
-        sendShortOrder[index]  = Poloniex::sendShortOrder;
-        isOrderComplete[index] = Poloniex::isOrderComplete;
-        getActivePos[index]    = Poloniex::getActivePos;
-        getLimitPrice[index]   = Poloniex::getLimitPrice;
-
-        dbTableName[index]     = "poloniex";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
-    if (params.gdaxEnable &&
-        (params.gdaxApi.empty() == false || (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("GDAX", params.gdaxFees, false, false);
-        getQuote[index]      = GDAX::getQuote;
-        getAvail[index]      = GDAX::getAvail;
-        getActivePos[index]  = GDAX::getActivePos;
-        getLimitPrice[index] = GDAX::getLimitPrice;
-
-        dbTableName[index]   = "gdax";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
     // We need at least two exchanges to run Blackbird
     if (index < 2) {
         std::cout
@@ -241,7 +123,8 @@ int main(int argc, char **argv) {
             << "TOTAL_EXPOSURE,BALANCE_BEFORE,BALANCE_AFTER,RETURN"
             << std::endl;
     // Creates the log file where all events will be saved
-    std::string   logFileName = "output/blackbird_log_" + currDateTime + ".log";
+    //std::string   logFileName = "output/blackbird_log_" + currDateTime + ".log";
+    std::string   logFileName = "output/blackbird.log";
     std::ofstream logFile(logFileName, std::ofstream::trunc);
     logFile.imbue(mylocale);
     logFile.precision(2);
@@ -264,12 +147,12 @@ int main(int argc, char **argv) {
 
     std::cout << "Log file generated: " << logFileName << "\nBlackbird is running... (pid " << getpid() << ")\n"
               << std::endl;
-    int                   numExch = params.nbExch();
+    int               numExch = params.nbExch();
 
     // The exchanges vector contains details about every exchange,
     // like fees, as specified in exchanges.h
-    std::vector<Exchange> exchanges;
-    loadExchanges(params, numExch, exchanges);
+    std::vector<Coin> coins;
+    loadExchanges(params, numExch, coins);
 
     // Inits cURL connections
     params.curl = curl_easy_init();
@@ -292,15 +175,19 @@ int main(int argc, char **argv) {
     // Gets the the balances from every exchange
     // This is only done when not in Demo mode.
     std::vector<Balance> balance(numExch);
-    if (!params.demoMode)
-        std::transform(getAvail, getAvail + numExch,
-                       begin(balance),
-                       [&params](decltype(*getAvail) apply) {
-                           Balance tmp{};
-                           tmp.leg1 = apply(params, "btc");
-                           tmp.leg2 = apply(params, "usd");
-                           return tmp;
-                       });
+    //if (!params.demoMode)
+    //    // TODO: Iterate through the pool vector and pull the balances.
+    //
+    //
+    //
+    //    std::transform(getAvail, getAvail + numExch,
+    //                   begin(balance),
+    //                   [&params](decltype(*getAvail) apply) {
+    //                       Balance tmp{};
+    //                       tmp.leg1 = apply(params, "btc");
+    //                       tmp.leg2 = apply(params, "usd");
+    //                       return tmp;
+    //                   });
 
     // Checks for a restore.txt file, to see if
     // the program exited with an open position.
@@ -388,7 +275,7 @@ int main(int argc, char **argv) {
         }
         // Gets the bid and ask of all the exchanges
         for (int i = 0; i < numExch; ++i) {
-            auto   quote = getQuote[i](params);
+            auto   quote = pool[i]->getQuote(params);
             double bid   = quote.bid();
             double ask   = quote.ask();
 
@@ -413,7 +300,7 @@ int main(int argc, char **argv) {
                 // 4 for cryptocurrencies
             }
             // Updates the Bitcoin vector with the latest bid/ask data
-            exchanges[i].updateData(quote);
+            coins[i].updateData(quote);
             curl_easy_reset(params.curl);
         }
         if (params.verbose) {
@@ -426,9 +313,9 @@ int main(int argc, char **argv) {
             for (int i = 0; i < numExch; ++i) {
                 for (int j = 0; j < numExch; ++j) {
                     if (i != j) {
-                        if (exchanges[j].getHasShort()) {
-                            double longMidPrice  = exchanges[i].getMidPrice();
-                            double shortMidPrice = exchanges[j].getMidPrice();
+                        if (coins[j].getHasShort()) {
+                            double longMidPrice  = coins[i].getMidPrice();
+                            double shortMidPrice = coins[j].getMidPrice();
                             if (longMidPrice > 0.0 && shortMidPrice > 0.0) {
                                 if (res.volatility[i][j].size() >= params.volatilityPeriod) {
                                     res.volatility[i][j].pop_back();
@@ -445,7 +332,7 @@ int main(int argc, char **argv) {
             for (int i = 0; i < numExch; ++i) {
                 for (int j = 0; j < numExch; ++j) {
                     if (i != j) {
-                        if (checkEntry(&exchanges[i], &exchanges[j], res, params)) {
+                        if (checkEntry(&coins[i], &coins[j], res, params)) {
                             // An entry opportunity has been found!
                             res.exposure = std::min(balance[res.idExchLong].leg2, balance[res.idExchShort].leg2);
                             if (params.demoMode) {
@@ -482,10 +369,10 @@ int main(int argc, char **argv) {
                             }
                             // Checks the volumes and, based on that, computes the limit prices
                             // that will be sent to the exchanges
-                            double volumeLong    = res.exposure / exchanges[res.idExchLong].getAsk();
-                            double volumeShort   = res.exposure / exchanges[res.idExchShort].getBid();
-                            double limPriceLong  = getLimitPrice[res.idExchLong](params, volumeLong, false);
-                            double limPriceShort = getLimitPrice[res.idExchShort](params, volumeShort, true);
+                            double volumeLong    = res.exposure / coins[res.idExchLong].getAsk();
+                            double volumeShort   = res.exposure / coins[res.idExchShort].getBid();
+                            double limPriceLong  = pool[res.idExchLong]->getLimitPrice(params, volumeLong, false);
+                            double limPriceShort = pool[res.idExchShort]->getLimitPrice(params, volumeShort, true);
                             if (limPriceLong == 0.0 || limPriceShort == 0.0) {
                                 logFile
                                         << "WARNING: Opportunity found but error with the order books (limit price is null). Trade canceled\n";
@@ -520,25 +407,25 @@ int main(int argc, char **argv) {
                             res.trailing[res.idExchLong][res.idExchShort]  = 1.0;
 
                             // Send the orders to the two exchanges
-                            auto longOrderId  = sendLongOrder[res.idExchLong](params, "buy", volumeLong, limPriceLong);
-                            auto shortOrderId = sendShortOrder[res.idExchShort](params, "sell", volumeShort,
-                                                                                limPriceShort);
+                            auto longOrderId  = pool[res.idExchLong]->sendLongOrder(params, "buy", volumeLong, limPriceLong);
+                            auto shortOrderId = pool[res.idExchShort]->sendShortOrder(params, "sell", volumeShort,
+                                                                                      limPriceShort);
                             logFile << "Waiting for the two orders to be filled..." << std::endl;
                             sleep_for(millisecs(5000));
-                            bool isLongOrderComplete  = isOrderComplete[res.idExchLong](params, longOrderId);
-                            bool isShortOrderComplete = isOrderComplete[res.idExchShort](params, shortOrderId);
+                            bool isLongOrderComplete  = pool[res.idExchLong]->isOrderComplete(params, longOrderId);
+                            bool isShortOrderComplete = pool[res.idExchShort]->isOrderComplete(params, shortOrderId);
                             // Loops until both orders are completed
                             while (!isLongOrderComplete || !isShortOrderComplete) {
                                 sleep_for(millisecs(3000));
                                 if (!isLongOrderComplete) {
                                     logFile << "Long order on " << params.exchName[res.idExchLong] << " still open..."
                                             << std::endl;
-                                    isLongOrderComplete = isOrderComplete[res.idExchLong](params, longOrderId);
+                                    isLongOrderComplete = pool[res.idExchLong]->isOrderComplete(params, longOrderId);
                                 }
                                 if (!isShortOrderComplete) {
                                     logFile << "Short order on " << params.exchName[res.idExchShort] << " still open..."
                                             << std::endl;
-                                    isShortOrderComplete = isOrderComplete[res.idExchShort](params, shortOrderId);
+                                    isShortOrderComplete = pool[res.idExchShort]->isOrderComplete(params, shortOrderId);
                                 }
                             }
                             // Both orders are now fully executed
@@ -564,18 +451,18 @@ int main(int argc, char **argv) {
             }
         } else if (inMarket) {
             // We are in market and looking for an exit opportunity
-            if (checkExit(&exchanges[res.idExchLong], &exchanges[res.idExchShort], res, params, currTime)) {
+            if (checkExit(&coins[res.idExchLong], &coins[res.idExchShort], res, params, currTime)) {
                 // An exit opportunity has been found!
                 // We check the current leg1 exposure
                 std::vector<double> btcUsed(numExch);
                 for (int            i             = 0; i < numExch; ++i) {
-                    btcUsed[i] = getActivePos[i](params);
+                    btcUsed[i] = pool[i]->getActivePos(params);
                 }
                 // Checks the volumes and computes the limit prices that will be sent to the exchanges
                 double              volumeLong    = btcUsed[res.idExchLong];
                 double              volumeShort   = btcUsed[res.idExchShort];
-                double              limPriceLong  = getLimitPrice[res.idExchLong](params, volumeLong, true);
-                double              limPriceShort = getLimitPrice[res.idExchShort](params, volumeShort, false);
+                double              limPriceLong  = pool[res.idExchLong]->getLimitPrice(params, volumeLong, true);
+                double              limPriceShort = pool[res.idExchShort]->getLimitPrice(params, volumeShort, false);
                 if (limPriceLong == 0.0 || limPriceShort == 0.0) {
                     logFile
                             << "WARNING: Opportunity found but error with the order books (limit price is null). Trade canceled\n";
@@ -604,26 +491,26 @@ int main(int argc, char **argv) {
                             << params.leg1 << " exposure on " << params.exchName[res.idExchShort] << ": " << volumeShort
                             << '\n'
                             << std::endl;
-                    auto longOrderId  = sendLongOrder[res.idExchLong](params, "sell", fabs(btcUsed[res.idExchLong]),
-                                                                      limPriceLong);
-                    auto shortOrderId = sendShortOrder[res.idExchShort](params, "buy", fabs(btcUsed[res.idExchShort]),
-                                                                        limPriceShort);
+                    auto longOrderId  = pool[res.idExchLong]->sendLongOrder(params, "sell", fabs(btcUsed[res.idExchLong]),
+                                                                            limPriceLong);
+                    auto shortOrderId = pool[res.idExchShort]->sendShortOrder(params, "buy", fabs(btcUsed[res.idExchShort]),
+                                                                              limPriceShort);
                     logFile << "Waiting for the two orders to be filled..." << std::endl;
                     sleep_for(millisecs(5000));
-                    bool isLongOrderComplete  = isOrderComplete[res.idExchLong](params, longOrderId);
-                    bool isShortOrderComplete = isOrderComplete[res.idExchShort](params, shortOrderId);
+                    bool isLongOrderComplete  = pool[res.idExchLong]->isOrderComplete(params, longOrderId);
+                    bool isShortOrderComplete = pool[res.idExchShort]->isOrderComplete(params, shortOrderId);
                     // Loops until both orders are completed
                     while (!isLongOrderComplete || !isShortOrderComplete) {
                         sleep_for(millisecs(3000));
                         if (!isLongOrderComplete) {
                             logFile << "Long order on " << params.exchName[res.idExchLong] << " still open..."
                                     << std::endl;
-                            isLongOrderComplete = isOrderComplete[res.idExchLong](params, longOrderId);
+                            isLongOrderComplete = pool[res.idExchLong]->isOrderComplete(params, longOrderId);
                         }
                         if (!isShortOrderComplete) {
                             logFile << "Short order on " << params.exchName[res.idExchShort] << " still open..."
                                     << std::endl;
-                            isShortOrderComplete = isOrderComplete[res.idExchShort](params, shortOrderId);
+                            isShortOrderComplete = pool[res.idExchShort]->isOrderComplete(params, shortOrderId);
                         }
                     }
                     logFile << "Done\n" << std::endl;
@@ -631,8 +518,8 @@ int main(int argc, char **argv) {
                     shortOrderId = "0";
                     inMarket     = false;
                     for (int i = 0; i < numExch; ++i) {
-                        balance[i].leg2After = getAvail[i](params, "usd"); // FIXME: currency hard-coded
-                        balance[i].leg1After = getAvail[i](params, "btc"); // FIXME: currency hard-coded
+                        balance[i].leg2After = pool[i]->getAvail(params, "usd"); // FIXME: currency hard-coded
+                        balance[i].leg1After = pool[i]->getAvail(params, "btc"); // FIXME: currency hard-coded
                     }
                     for (int i = 0; i < numExch; ++i) {
                         logFile << "New balance on " << params.exchName[i] << ":  \t";
@@ -705,11 +592,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void loadExchanges(const Parameters &params, int numExch, vector<Exchange, allocator<Exchange>> &exchanges) {
+void loadExchanges(const Parameters &params, int numExch, vector<Coin, allocator<Coin>> &exchanges) {
     exchanges.reserve(numExch);
     // Creates a new Bitcoin structure within exchanges for every exchange we want to trade on
     for (int i = 0; i < numExch; ++i) {
         exchanges.push_back(
-                Exchange(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
+                Coin(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
     }
 }
