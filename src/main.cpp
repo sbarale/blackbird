@@ -1,6 +1,5 @@
 #include <iostream>       // std::cout, std::endl
 #include <thread>         // std::this_thread::sleep_for
-#include <chrono>         // std::chrono::seconds
 #include "exchanges/coin.h"
 #include "result.h"
 #include "time_fun.h"
@@ -12,7 +11,6 @@
 #include "exchanges/bitstamp.h"
 #include "utils/send_email.h"
 #include "utils/utils.h"
-#include <sys/types.h>
 #include <unistd.h>
 
 void loadExchanges(const Parameters &params, int numExch, vector<Coin, allocator<Coin>> &exchanges);
@@ -76,6 +74,7 @@ int main(int argc, char **argv) {
     // deal with USD.
     // TODO: should be in a separated function, and there probably is a better
     // way to implement that.
+
     int                                       index = 0;
     if (params.bitfinexEnable &&
         (params.bitfinexApi.empty() == false ||

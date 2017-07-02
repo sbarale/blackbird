@@ -2,7 +2,6 @@
 #include "curl_fun.h"
 #include "unique_json.hpp"
 #include <openssl/sha.h>
-<<<<<<< Updated upstream
 #include "bitstamp.h"
 #include "curl_fun.h"
 #include "unique_json.hpp"
@@ -12,9 +11,6 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
-=======
-
->>>>>>> Stashed changes
 
 Bitstamp::Bitstamp() {
     //std::cout << "Init BitStamp" << std::endl;

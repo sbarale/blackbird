@@ -27,13 +27,10 @@ public:
 
   RestApi              (string host, const char *cacert = nullptr,
                         std::ostream &log = std::cerr);
-<<<<<<< Updated upstream
-=======
  /*
   * Have to comment them out if I don't want to treat RestAPI as static
   * (for some reason, I really don't know what is this for)
   */
->>>>>>> Stashed changes
   //RestApi              (const RestApi &) = delete;
   //RestApi& operator =  (const RestApi &) = delete;
 
