@@ -6,6 +6,7 @@
 class Bitfinex : public AbstractExchange {
   public:
     Bitfinex();
+    quote_t getQuote(Parameters &params);
 };
 
 #endif

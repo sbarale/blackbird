@@ -1,3 +1,6 @@
+#include <iostream>       // std::cout, std::endl
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>         // std::chrono::seconds
 #include "exchanges/coin.h"
 #include "result.h"
 #include "time_fun.h"
@@ -8,11 +11,9 @@
 #include "exchanges/bitfinex.h"
 #include "exchanges/bitstamp.h"
 #include "utils/send_email.h"
-#include "unistd.h"
 #include "utils/utils.h"
-#include <iomanip>
-#include <thread>
-#include <math.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 void loadExchanges(const Parameters &params, int numExch, vector<Coin, allocator<Coin>> &exchanges);
 
@@ -66,22 +67,16 @@ int main(int argc, char **argv) {
 
     // Function arrays containing all the exchanges functions
     // using the 'typedef' declarations from above.
-    //getQuoteType                  getQuote[10];
-    //getAvailType                  getAvail[10];
-    //sendOrderType                 sendLongOrder[10];
-    //sendOrderType                 sendShortOrder[10];
-    //isOrderCompleteType           isOrderComplete[10];
-    //getActivePosType              getActivePos[10];
-    //getLimitPriceType             getLimitPrice[10];
-    std::string                     dbTableName[10];
-    std::vector<AbstractExchange *> pool;
+    std::string                               dbTableName[10];
+    std::vector<AbstractExchange *>           pool;
+    std::vector<AbstractExchange *>::iterator pool_iterator;
 
     // Adds the exchange functions to the arrays for all the defined exchanges
     // Poloniex is only used if the traded pair is ETH/BTC as they don't
     // deal with USD.
     // TODO: should be in a separated function, and there probably is a better
     // way to implement that.
-    int                             index = 0;
+    int                                       index = 0;
     if (params.bitfinexEnable &&
         (params.bitfinexApi.empty() == false ||
          (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
@@ -174,24 +169,33 @@ int main(int argc, char **argv) {
     logFile << "[ Current balances ]" << std::endl;
     // Gets the the balances from every exchange
     // This is only done when not in Demo mode.
-    std::vector<Balance> balance(numExch);
-    //if (!params.demoMode)
-    //    // TODO: Iterate through the pool vector and pull the balances.
-    //
-    //
-    //
-    //    std::transform(getAvail, getAvail + numExch,
-    //                   begin(balance),
-    //                   [&params](decltype(*getAvail) apply) {
-    //                       Balance tmp{};
-    //                       tmp.leg1 = apply(params, "btc");
-    //                       tmp.leg2 = apply(params, "usd");
-    //                       return tmp;
-    //                   });
+    std::vector<Balance>           balance(numExch);
+    std::vector<Balance>::iterator bi;
+    if (!params.demoMode) {
+        // TODO: Iterate through the pool vector and pull the balances.
 
+        //
+        //    std::transform(getAvail, getAvail + numExch,
+        //                   begin(balance),
+        //                   [&params](decltype(*getAvail) apply) {
+        //                       Balance tmp{};
+        //                       tmp.leg1 = apply(params, "btc");
+        //                       tmp.leg2 = apply(params, "usd");
+        //                       return tmp;
+        //                   });
+
+        /*
+         * TODO: Verify that it replaces the above functionality
+         */
+        for (int i = 0; i < pool.size(); i++) {
+            balance[i].leg1 = pool[i]->getAvail(params, "btc");
+            balance[i].leg2 = pool[i]->getAvail(params, "usd");
+        }
+
+    }
     // Checks for a restore.txt file, to see if
     // the program exited with an open position.
-    Result               res;
+    Result                         res;
     res.reset();
     bool     inMarket = res.loadPartialResult("restore.txt");
 
@@ -275,9 +279,10 @@ int main(int argc, char **argv) {
         }
         // Gets the bid and ask of all the exchanges
         for (int i = 0; i < numExch; ++i) {
-            auto   quote = pool[i]->getQuote(params);
-            double bid   = quote.bid();
-            double ask   = quote.ask();
+            AbstractExchange *e    = pool[i];
+            quote_t          quote = e->getQuote(params);
+            double           bid   = quote.bid();
+            double           ask   = quote.ask();
 
             // Saves the bid/ask into the SQLite database
             addBidAskToDb(dbTableName[i], printDateTimeDb(currTime), bid, ask, params);
