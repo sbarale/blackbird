@@ -145,7 +145,7 @@ void Parameters::addExchange(std::string n, double f, bool h, bool m) {
 }
 
 int Parameters::nbExch() const {
-    return exchName.size();
+    return (int) exchName.size();
 }
 
 std::string Parameters::tradedPair() const {

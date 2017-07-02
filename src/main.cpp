@@ -15,17 +15,24 @@
 #include <unistd.h>
 #include <cmath>
 
+using std::this_thread::sleep_for;
+using millisecs = std::chrono::milliseconds;
+using secs      = std::chrono::seconds;
+
 void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile);
 void writeBalances(const Parameters &params, ofstream &logFile, int numExch, const vector<Balance, allocator<Balance>> &balance, bool inMarket);
-void verifyParameters( Parameters &params);
+void verifyParameters(Parameters &params);
 void checkTimeslot(const Parameters &params, const Result &res, bool inMarket, time_t &rawtime, time_t diffTime, ofstream &logFile, tm &timeinfo, time_t &currTime);
 void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<AbstractExchange *, allocator<AbstractExchange *>> &pool);
-void logCashExposure( Parameters &params, ofstream &logFile);
+void logCashExposure(Parameters &params, ofstream &logFile);
+void waitToStart(const Parameters &params, ofstream &logFile, time_t &rawtime, tm &timeinfo);
+void updateBalances(const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, Parameters &params, vector<Balance, allocator<Balance>> &balance);
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
 int main(int argc, char **argv) {
+
     std::cout << "Blackbird Bitcoin Arbitrage" << std::endl;
     std::cout << "DISCLAIMER: USE THE SOFTWARE AT YOUR OWN RISK\n" << std::endl;
     // Replaces the C++ global locale with the user-preferred locale
@@ -36,8 +43,8 @@ int main(int argc, char **argv) {
 
     // Function arrays containing all the exchanges functions
     // using the 'typedef' declarations from above.
-    std::string                               dbTableName[10];
-    std::vector<AbstractExchange *>           pool;
+    std::string                     dbTableName[10];
+    std::vector<AbstractExchange *> pool;
     loadExchangesConfiguration(params, dbTableName, pool);
 
     // Creates the CSV file that will collect the trade results
@@ -81,7 +88,7 @@ int main(int argc, char **argv) {
     loadExchanges(params, numExch, symbol);
 
     // Inits cURL connections
-    params.curl = curl_easy_init();
+    params.curl            = curl_easy_init();
     // Shows the spreads
     logFile << "[ Targets ]\n"
             << std::setprecision(2)
@@ -97,70 +104,36 @@ int main(int argc, char **argv) {
         logFile << "   WARNING: Spread Target should be positive" << std::endl;
     }
     logFile << std::endl;
+
     logFile << "[ Current balances ]" << std::endl;
     // Gets the the balances from every exchange
     // This is only done when not in Demo mode.
-    std::vector<Balance>           balance(numExch);
-    if (!params.demoMode) {
-        // TODO: Iterate through the pool vector and pull the balances.
+    std::vector<Balance> balance(numExch);
 
-        //
-        //    std::transform(getAvail, getAvail + numExch,
-        //                   begin(balance),
-        //                   [&params](decltype(*getAvail) apply) {
-        //                       Balance tmp{};
-        //                       tmp.leg1 = apply(params, "btc");
-        //                       tmp.leg2 = apply(params, "usd");
-        //                       return tmp;
-        //                   });
-
-        /*
-         * TODO: Verify that it replaces the above functionality
-         */
-        for (int i = 0; i < pool.size(); i++) {
-            balance[i].leg1 = pool[i]->getAvail(params, "btc");
-            balance[i].leg2 = pool[i]->getAvail(params, "usd");
-        }
-
-    }
-    // Checks for a restore.txt file, to see if
-    // the program exited with an open position.
-    Result                         res;
+    Result res;
     res.reset();
-    bool     inMarket = res.loadPartialResult("restore.txt");
-    writeBalances(params, logFile, numExch, balance, inMarket);
-
-    logCashExposure(params, logFile);
-    // Code implementing the loop function, that runs
-    // every 'Interval' seconds.
-    time_t rawtime  = time(nullptr);
-    tm     timeinfo = *localtime(&rawtime);
-    using std::this_thread::sleep_for;
-    using millisecs = std::chrono::milliseconds;
-    using secs      = std::chrono::seconds;
-    // Waits for the next 'interval' seconds before starting the loop
-    while ((int) timeinfo.tm_sec % params.interval != 0) {
-        sleep_for(millisecs(100));
-        time(&rawtime);
-        timeinfo = *localtime(&rawtime);
-    }
-    if (!params.verbose) {
-        logFile << "Running..." << std::endl;
-    }
-
+    time_t   rawtime;
+    tm       timeinfo;
     int      resultId      = 0;
     unsigned currIteration = 0;
     bool     stillRunning  = true;
     time_t   currTime;
     time_t   diffTime;
 
+    // Checks for a restore.txt file, to see if
+    // the program exited with an open position.
+    bool     inMarket      = res.loadPartialResult("restore.txt");
+
+    updateBalances(pool, params, balance);
+    writeBalances(params, logFile, numExch, balance, inMarket);
+    logCashExposure(params, logFile);
+    waitToStart(params, logFile, rawtime, timeinfo);
+
     // Main analysis loop
     while (stillRunning) {
         checkTimeslot(params, res, inMarket, rawtime, diffTime, logFile, timeinfo, currTime);
         getBidAndAskPrices(dbTableName, pool, numExch, symbol, currTime, params, logFile);
-        if (params.verbose) {
-            logFile << "   ----------------------------" << std::endl;
-        }
+
         // Stores all the spreads in arrays to
         // compute the volatility. The volatility
         // is not used for the moment.
@@ -447,7 +420,47 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void logCashExposure( Parameters &params, ofstream &logFile) {
+void updateBalances(const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, Parameters &params, vector<Balance, allocator<Balance>> &balance) {
+    if (!params.demoMode) {
+        // TODO: Iterate through the pool vector and pull the balances.
+
+        //
+        //    std::transform(getAvail, getAvail + numExch,
+        //                   begin(balance),
+        //                   [&params](decltype(*getAvail) apply) {
+        //                       Balance tmp{};
+        //                       tmp.leg1 = apply(params, "btc");
+        //                       tmp.leg2 = apply(params, "usd");
+        //                       return tmp;
+        //                   });
+
+        /*
+         * TODO: Verify that it replaces the above functionality
+         */
+        for (int i = 0; i < pool.size(); i++) {
+            balance[i].leg1 = pool[i]->getAvail(params, "btc");
+            balance[i].leg2 = pool[i]->getAvail(params, "usd");
+        }
+
+    }
+}
+
+void waitToStart(const Parameters &params, ofstream &logFile, time_t &rawtime, tm &timeinfo) {
+    rawtime  = time(nullptr);
+    timeinfo = *localtime(&rawtime);// Code implementing the loop function, that runs
+    // every 'Interval' seconds.// Waits for the next 'interval' seconds before starting the loop
+    while ((int) timeinfo.tm_sec % params.interval != 0) {
+        this_thread::sleep_for(millisecs(100));
+        time(&rawtime);
+        timeinfo = *localtime(&rawtime);
+    }
+
+    if (!params.verbose) {
+        logFile << "Running..." << endl;
+    }
+}
+
+void logCashExposure(Parameters &params, ofstream &logFile) {
     logFile << "[ Cash exposure ]\n";
     if (params.demoMode) {
         logFile << "   No cash - Demo mode\n";
@@ -468,7 +481,7 @@ void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<
     // TODO: should be in a separated function, and there probably is a better
     // way to implement that.
 
-    int                                       index = 0;
+    int index = 0;
     if (params.bitfinexEnable &&
         (params.bitfinexApi.empty() == false ||
          (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
@@ -507,31 +520,34 @@ void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<
 void checkTimeslot(const Parameters &params, const Result &res, bool inMarket, time_t &rawtime, time_t diffTime, ofstream &logFile, tm &timeinfo, time_t &currTime) {
     currTime = mktime(&timeinfo);
     time(&rawtime);
-    diffTime   = difftime(rawtime, currTime);
+    diffTime = difftime(rawtime, currTime);
     // Checks if we are already too late in the current iteration
     // If that's the case we wait until the next iteration
     // and we show a warning in the log file.
     if (diffTime > 0) {
-            logFile << "WARNING: " << diffTime << " second(s) too late at " << printDateTime(currTime) << endl;
-            timeinfo.tm_sec += (ceil(diffTime / params.interval) + 1) * params.interval;
-            currTime = mktime(&timeinfo);
-            this_thread::sleep_for(std::chrono::seconds(params.interval - (diffTime % params.interval)));
-            logFile << endl;
-        } else if (diffTime < 0) {
-            this_thread::sleep_for(std::chrono::seconds(-diffTime));
-        }
+        logFile << "WARNING: " << diffTime << " second(s) too late at " << printDateTime(currTime) << endl;
+        timeinfo.tm_sec += (ceil(diffTime / params.interval) + 1) * params.interval;
+        currTime = mktime(&timeinfo);
+        this_thread::sleep_for(std::chrono::seconds(params.interval - (diffTime % params.interval)));
+        logFile << endl;
+    } else if (diffTime < 0) {
+        this_thread::sleep_for(std::chrono::seconds(-diffTime));
+    }
     // Header for every iteration of the loop
     if (params.verbose) {
-            if (!inMarket) {
-                logFile << "[ " << printDateTime(currTime) << " ]" << endl;
-            } else {
-                logFile << "[ " << printDateTime(currTime) << " IN MARKET: Long " << res.exchNameLong << " / Short "
-                        << res.exchNameShort << " ]" << endl;
-            }
+        if (!inMarket) {
+            logFile << "[ " << printDateTime(currTime) << " ]" << endl;
+        } else {
+            logFile << "[ " << printDateTime(currTime) << " IN MARKET: Long " << res.exchNameLong << " / Short "
+                    << res.exchNameShort << " ]" << endl;
         }
+    }
+    if (params.verbose) {
+        logFile << "   ----------------------------" << std::endl;
+    }
 }
 
-void verifyParameters( Parameters &params) {// Does some verifications about the parameters
+void verifyParameters(Parameters &params) {// Does some verifications about the parameters
     if (!params.demoMode) {
         if (!params.useFullExposure) {
             if (params.testedExposure < 10.0 && params.leg2.compare("USD") == 0) {
@@ -542,7 +558,7 @@ void verifyParameters( Parameters &params) {// Does some verifications about the
             }
             if (params.testedExposure > params.maxExposure) {
                 cout << "ERROR: Test exposure (" << params.testedExposure << ") is above max exposure ("
-                          << params.maxExposure << ")\n" << endl;
+                     << params.maxExposure << ")\n" << endl;
                 exit(EXIT_FAILURE);
             }
         }
@@ -573,7 +589,7 @@ void verifyParameters( Parameters &params) {// Does some verifications about the
 }
 
 void writeBalances(const Parameters &params, ofstream &logFile, int numExch, const vector<Balance, allocator<Balance>> &balance, bool inMarket) {// Writes the current balances into the log file
-    for (int i        = 0; i < numExch; ++i) {
+    for (int i = 0; i < numExch; ++i) {
         logFile << "   " << params.exchName[i] << ":\t";
         if (params.demoMode) {
             logFile << "n/a (demo mode)" << endl;
@@ -594,35 +610,35 @@ void writeBalances(const Parameters &params, ofstream &logFile, int numExch, con
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile) {
     // Gets the bid and ask of all the exchanges
     for (int i = 0; i < numExch; ++i) {
-            AbstractExchange *e    = pool[i];
-            quote_t          quote = e->getQuote(params);
-            double           bid   = quote.bid();
-            double           ask   = quote.ask();
+        AbstractExchange *e    = pool[i];
+        quote_t          quote = e->getQuote(params);
+        double           bid   = quote.bid();
+        double           ask   = quote.ask();
 
-            // Saves the bid/ask into the SQLite database
-            addBidAskToDb(dbTableName[i], printDateTimeDb(currTime), bid, ask, params);
+        // Saves the bid/ask into the SQLite database
+        addBidAskToDb(dbTableName[i], printDateTimeDb(currTime), bid, ask, params);
 
-            // If there is an error with the bid or ask (i.e. value is null),
-            // we show a warning but we don't stop the loop.
-            if (bid == 0.0) {
-                logFile << "   WARNING: " << params.exchName[i] << " bid is null" << endl;
-            }
-            if (ask == 0.0) {
-                logFile << "   WARNING: " << params.exchName[i] << " ask is null" << endl;
-            }
-            // Shows the bid/ask information in the log file
-            if (params.verbose) {
-                logFile << "   " << params.exchName[i] << ": \t"
-                        << setprecision(4)
-                        << bid << " / " << ask << endl;
-                // TODO: precision should be:
-                // 2 for USD
-                // 4 for cryptocurrencies
-            }
-            // Updates the Bitcoin vector with the latest bid/ask data
-            symbol[i].updateData(quote);
-            curl_easy_reset(params.curl);
+        // If there is an error with the bid or ask (i.e. value is null),
+        // we show a warning but we don't stop the loop.
+        if (bid == 0.0) {
+            logFile << "   WARNING: " << params.exchName[i] << " bid is null" << endl;
         }
+        if (ask == 0.0) {
+            logFile << "   WARNING: " << params.exchName[i] << " ask is null" << endl;
+        }
+        // Shows the bid/ask information in the log file
+        if (params.verbose) {
+            logFile << "   " << params.exchName[i] << ": \t"
+                    << setprecision(4)
+                    << bid << " / " << ask << endl;
+            // TODO: precision should be:
+            // 2 for USD
+            // 4 for cryptocurrencies
+        }
+        // Updates the Bitcoin vector with the latest bid/ask data
+        symbol[i].updateData(quote);
+        curl_easy_reset(params.curl);
+    }
 }
 
 void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges) {
