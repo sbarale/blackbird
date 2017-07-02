@@ -1,7 +1,7 @@
 #ifndef GEMINI_H
 #define GEMINI_H
 
-#include "quote_t.h"
+#include "components/quote_t.h"
 #include <string>
 
 struct json_t;

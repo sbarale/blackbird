@@ -1,7 +1,7 @@
 #ifndef GDAX_H
 #define GDAX_H
 
-#include "quote_t.h"
+#include "components/quote_t.h"
 #include <string>
 
 struct Parameters;

@@ -1,8 +1,8 @@
 #include "itbit.h"
-#include "parameters.h"
-#include "curl_fun.h"
+#include "components/parameters.h"
+#include "utils/curl_fun.h"
 #include "utils/restapi.h"
-#include "unique_json.hpp"
+#include "utils/unique_json.hpp"
 
 
 namespace ItBit {

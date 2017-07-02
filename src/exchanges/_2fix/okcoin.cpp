@@ -1,9 +1,9 @@
 #include "okcoin.h"
-#include "parameters.h"
-#include "curl_fun.h"
+#include "components/parameters.h"
+#include "utils/curl_fun.h"
 #include "utils/restapi.h"
-#include "hex_str.hpp"
-#include "unique_json.hpp"
+#include "utils/hex_str.hpp"
+#include "utils/unique_json.hpp"
 
 #include "openssl/md5.h"
 #include <sstream>

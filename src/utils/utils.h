@@ -5,8 +5,8 @@
 #ifndef BLACKBIRD_UTILS_H
 #define BLACKBIRD_UTILS_H
 
-#include "../parameters.h"
-#include "../quote_t.h"
+#include "components/parameters.h"
+#include "components/quote_t.h"
 #include "iostream"
 
 using namespace std;
@@ -19,11 +19,11 @@ using namespace std;
 // Each function is implemented in the files located in the 'exchanges' folder.
 typedef quote_t     (*getQuoteType)(Parameters &params);
 
-typedef double      (*getAvailType)(Parameters &params, std::__1::string currency);
+typedef double      (*getAvailType)(Parameters &params, std::string currency);
 
-typedef std::string (*sendOrderType)(Parameters &params, std::__1::string direction, double quantity, double price);
+typedef std::string (*sendOrderType)(Parameters &params, std::string direction, double quantity, double price);
 
-typedef bool        (*isOrderCompleteType)(Parameters &params, std::__1::string orderId);
+typedef bool        (*isOrderCompleteType)(Parameters &params, std::string orderId);
 
 typedef double      (*getActivePosType)(Parameters &params);
 

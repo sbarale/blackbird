@@ -11,30 +11,31 @@ find_package(OpenSSL)
 find_package(SQLite3)
 
 file(GLOB SOURCES
-    src/*.cpp
-    src/exchanges/*.cpp
-    src/utils/*.cpp)
+        src/*.cpp
+        src/components/*.cpp
+        src/exchanges/*.cpp
+        src/utils/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES} src/exchanges/ApiParameters.h)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -pedantic -Wno-missing-braces)
-endif()
+        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -pedantic -Wno-missing-braces)
+endif ()
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
-endif()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
+endif ()
 set_target_properties(${PROJECT_NAME} PROPERTIES
-                                      CXX_STANDARD 11
-                                      CXX_STANDARD_REQUIRED YES
-                                      CXX_EXTENSIONS NO)
-target_include_directories (${PROJECT_NAME} PRIVATE
-                            ${PROJECT_SOURCE_DIR}/src
-                            ${SQLITE3_INCLUDE_DIR}
-                            ${CURL_INCLUDE_DIR}
-                            ${OPENSSL_INCLUDE_DIR}
-                            ${JANSSON_INCLUDE_DIR})
+        CXX_STANDARD 11
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO)
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
+        ${SQLITE3_INCLUDE_DIR}
+        ${CURL_INCLUDE_DIR}
+        ${OPENSSL_INCLUDE_DIR}
+        ${JANSSON_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES}
-                                      ${JANSSON_LIBRARIES}
-                                      ${OPENSSL_LIBRARIES}
-                                      ${SQLITE3_LIBRARIES})
+        ${JANSSON_LIBRARIES}
+        ${OPENSSL_LIBRARIES}
+        ${SQLITE3_LIBRARIES})
 cotire(${PROJECT_NAME})

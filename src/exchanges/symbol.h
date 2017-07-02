@@ -1,13 +1,13 @@
 #ifndef BITCOIN_H
 #define BITCOIN_H
 
-#include "quote_t.h"
+#include "components/quote_t.h"
 #include <string>
 
 // Contains all the information for a given exchange, 
 // like fees and wether we can short on that exchange.
 // FIXME: short selling should depend on the currency.
-class Coin {
+class Symbol {
 
   private:
     unsigned    id;
@@ -18,7 +18,7 @@ class Coin {
     double      bid, ask;
 
   public:
-    Coin(unsigned id, std::string n, double f, bool h, bool m);
+    Symbol(unsigned id, std::string n, double f, bool h, bool m);
     void updateData(quote_t quote);
     unsigned getId() const;
     double getAsk() const;

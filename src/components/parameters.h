@@ -1,7 +1,7 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-#include "unique_sqlite.hpp"
+#include "utils/unique_sqlite.hpp"
 
 #include <fstream>
 #include <string>

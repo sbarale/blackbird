@@ -1,5 +1,5 @@
 #include "result.h"
-#include "time_fun.h"
+#include "utils/time_fun.h"
 #include <type_traits>
 #include <iostream>
 #include <fstream>

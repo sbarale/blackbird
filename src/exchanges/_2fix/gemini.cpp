@@ -1,9 +1,9 @@
 #include "gemini.h"
-#include "parameters.h"
-#include "curl_fun.h"
+#include "components/parameters.h"
+#include "utils/curl_fun.h"
 #include "utils/restapi.h"
 #include "utils/base64.h"
-#include "unique_json.hpp"
+#include "utils/unique_json.hpp"
 
 #include "openssl/sha.h"
 #include "openssl/hmac.h"

@@ -1,8 +1,8 @@
 #include "kraken.h"
-#include "parameters.h"
+#include "components/parameters.h"
 #include "utils/restapi.h"
 #include "utils/base64.h"
-#include "unique_json.hpp"
+#include "utils/unique_json.hpp"
 
 #include "openssl/sha.h"
 #include "openssl/hmac.h"

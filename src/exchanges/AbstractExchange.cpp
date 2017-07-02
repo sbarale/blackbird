@@ -1,9 +1,9 @@
-
+#include <array>
 #include <utils/base64.h>
-#include <hex_str.hpp>
-#include "unique_json.hpp"
+#include <utils/hex_str.hpp>
+#include "utils/unique_json.hpp"
 #include "utils/restapi.h"
-#include "parameters.h"
+#include "components/parameters.h"
 #include "AbstractExchange.h"
 
 /*

@@ -1,10 +1,10 @@
 #include "bitstamp.h"
-#include "curl_fun.h"
-#include "unique_json.hpp"
+#include "utils/curl_fun.h"
+#include "utils/unique_json.hpp"
 #include <openssl/sha.h>
 #include "bitstamp.h"
-#include "curl_fun.h"
-#include "unique_json.hpp"
+#include "utils/curl_fun.h"
+#include "utils/unique_json.hpp"
 #include "openssl/sha.h"
 #include "openssl/hmac.h"
 #include <thread>

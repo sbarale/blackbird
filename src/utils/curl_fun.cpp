@@ -1,5 +1,5 @@
 #include "curl_fun.h"
-#include "parameters.h"
+#include "components/parameters.h"
 
 #include "curl/curl.h"
 #include "jansson.h"

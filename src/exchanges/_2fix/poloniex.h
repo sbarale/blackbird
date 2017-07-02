@@ -1,7 +1,7 @@
 #ifndef POLONIEX_H
 #define POLONIEX_H
 
-#include "quote_t.h"
+#include "components/quote_t.h"
 #include <string>
 
 struct Parameters;

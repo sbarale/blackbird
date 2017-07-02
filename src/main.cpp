@@ -1,19 +1,21 @@
 #include <iostream>       // std::cout, std::endl
+#include <iomanip>
 #include <thread>         // std::this_thread::sleep_for
-#include "exchanges/coin.h"
-#include "result.h"
-#include "time_fun.h"
-#include "curl_fun.h"
-#include "db_fun.h"
-#include "parameters.h"
-#include "check_entry_exit.h"
+#include "exchanges/symbol.h"
+#include "components/result.h"
+#include "utils/time_fun.h"
+#include "utils/curl_fun.h"
+#include "utils/db_fun.h"
+#include "components/parameters.h"
+#include "components/check_entry_exit.h"
 #include "exchanges/bitfinex.h"
 #include "exchanges/bitstamp.h"
 #include "utils/send_email.h"
 #include "utils/utils.h"
 #include <unistd.h>
+#include <cmath>
 
-void loadExchanges(const Parameters &params, int numExch, vector<Coin, allocator<Coin>> &exchanges);
+void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
@@ -141,11 +143,11 @@ int main(int argc, char **argv) {
 
     std::cout << "Log file generated: " << logFileName << "\nBlackbird is running... (pid " << getpid() << ")\n"
               << std::endl;
-    int               numExch = params.nbExch();
+    int                 numExch = params.nbExch();
 
     // The exchanges vector contains details about every exchange,
     // like fees, as specified in exchanges.h
-    std::vector<Coin> coins;
+    std::vector<Symbol> coins;
     loadExchanges(params, numExch, coins);
 
     // Inits cURL connections
@@ -260,7 +262,7 @@ int main(int argc, char **argv) {
         // and we show a warning in the log file.
         if (diffTime > 0) {
             logFile << "WARNING: " << diffTime << " second(s) too late at " << printDateTime(currTime) << std::endl;
-            timeinfo.tm_sec += (ceil(diffTime / params.interval) + 1) * params.interval;
+            timeinfo.tm_sec += (std::ceil(diffTime / params.interval) + 1) * params.interval;
             currTime = mktime(&timeinfo);
             sleep_for(secs(params.interval - (diffTime % params.interval)));
             logFile << std::endl;
@@ -596,11 +598,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void loadExchanges(const Parameters &params, int numExch, vector<Coin, allocator<Coin>> &exchanges) {
+void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges) {
     exchanges.reserve(numExch);
     // Creates a new Bitcoin structure within exchanges for every exchange we want to trade on
     for (int i = 0; i < numExch; ++i) {
         exchanges.push_back(
-                Coin(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
+                Symbol(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
     }
 }

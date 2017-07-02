@@ -1,7 +1,7 @@
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
-#include "quote_t.h"
+#include "components/quote_t.h"
 #include <string>
 
 struct json_t;

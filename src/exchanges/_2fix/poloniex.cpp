@@ -1,8 +1,8 @@
 #include "poloniex.h"
-#include "parameters.h"
+#include "components/parameters.h"
 #include "utils/restapi.h"
-#include "unique_json.hpp"
-#include "hex_str.hpp"
+#include "utils/unique_json.hpp"
+#include "utils/hex_str.hpp"
 
 #include "openssl/sha.h"
 #include "openssl/hmac.h"

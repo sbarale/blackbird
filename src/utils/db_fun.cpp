@@ -1,4 +1,4 @@
-#include "parameters.h"
+#include "components/parameters.h"
 #include "unique_sqlite.hpp"
 
 #include <iostream>

@@ -1,7 +1,7 @@
 #include "gdax.h"
-#include "parameters.h"
+#include "components/parameters.h"
 #include "utils/restapi.h"
-#include "unique_json.hpp"
+#include "utils/unique_json.hpp"
 
 namespace GDAX {
 

@@ -1,7 +1,7 @@
-#include "coin.h"
+#include "symbol.h"
 #include <cmath>
 
-Coin::Coin(unsigned i, std::string n, double f, bool h, bool m) {
+Symbol::Symbol(unsigned i, std::string n, double f, bool h, bool m) {
     id            = i;
     exchName      = n;
     fees          = f;
@@ -11,24 +11,24 @@ Coin::Coin(unsigned i, std::string n, double f, bool h, bool m) {
     ask           = 0.0;
 }
 
-void Coin::updateData(quote_t quote) {
+void Symbol::updateData(quote_t quote) {
     bid = quote.bid();
     ask = quote.ask();
 }
 
-unsigned Coin::getId() const {
+unsigned Symbol::getId() const {
     return id;
 }
 
-double Coin::getBid() const {
+double Symbol::getBid() const {
     return bid;
 }
 
-double Coin::getAsk() const {
+double Symbol::getAsk() const {
     return ask;
 }
 
-double Coin::getMidPrice() const {
+double Symbol::getMidPrice() const {
     if (bid > 0.0 && ask > 0.0) {
         return (bid + ask) / 2.0;
     } else {
@@ -36,18 +36,18 @@ double Coin::getMidPrice() const {
     }
 }
 
-std::string Coin::getExchName() const {
+std::string Symbol::getExchName() const {
     return exchName;
 }
 
-double Coin::getFees() const {
+double Symbol::getFees() const {
     return fees;
 }
 
-bool Coin::getHasShort() const {
+bool Symbol::getHasShort() const {
     return hasShort;
 }
 
-bool Coin::getIsImplemented() const {
+bool Symbol::getIsImplemented() const {
     return isImplemented;
 }

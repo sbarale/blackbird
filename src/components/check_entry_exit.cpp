@@ -1,7 +1,7 @@
 #include "check_entry_exit.h"
-#include "exchanges/coin.h"
-#include "result.h"
-#include "parameters.h"
+#include "exchanges/symbol.h"
+#include "components/result.h"
+#include "components/parameters.h"
 #include <sstream>
 #include <iomanip>
 #include <iterator>
@@ -30,7 +30,7 @@ std::string percToStr(double perc) {
   return s.str();
 }
 
-bool checkEntry(Coin* btcLong, Coin* btcShort, Result& res, Parameters& params) {
+bool checkEntry(Symbol* btcLong, Symbol* btcShort, Result& res, Parameters& params) {
   
   if (!btcShort->getHasShort()) return false;
 
@@ -134,7 +134,7 @@ bool checkEntry(Coin* btcLong, Coin* btcShort, Result& res, Parameters& params) 
   return true;
 }
 
-bool checkExit(Coin* btcLong, Coin* btcShort, Result& res, Parameters& params, time_t period) {
+bool checkExit(Symbol* btcLong, Symbol* btcShort, Result& res, Parameters& params, time_t period) {
   double priceLong  = btcLong->getBid();
   double priceShort = btcShort->getAsk();
   if (priceLong > 0.0 && priceShort > 0.0) {

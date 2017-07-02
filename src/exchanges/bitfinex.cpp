@@ -1,5 +1,5 @@
 #include "bitfinex.h"
-#include "unique_json.hpp"
+#include "utils/unique_json.hpp"
 
 Bitfinex::Bitfinex() {
     //std::cout << "Init Bitfinex" << std::endl;

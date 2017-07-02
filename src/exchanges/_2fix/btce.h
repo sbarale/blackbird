@@ -1,7 +1,7 @@
 #ifndef BTCE_H
 #define BTCE_H
 
-#include "quote_t.h"
+#include "components/quote_t.h"
 #include <string>
 
 struct Parameters;

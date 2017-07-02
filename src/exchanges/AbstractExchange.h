@@ -2,10 +2,10 @@
 #define BLACKBIRD_ABSTRACTEXCHANGE_H
 
 #include <string>
-#include <parameters.h>
+#include <components/parameters.h>
 #include <jansson.h>
 #include <utils/restapi.h>
-#include "quote_t.h"
+#include "components/quote_t.h"
 #include "ApiParameters.h"
 
 class AbstractExchange {
@@ -22,17 +22,15 @@ class AbstractExchange {
 
     virtual RestApi queryHandle(Parameters &params);
     virtual json_t *checkResponse(std::ostream &logFile, json_t *root);
-    virtual json_t *authRequest(Parameters &params, std::__1::string request, std::__1::string options);
+    virtual json_t *authRequest(Parameters &params, std::string request, std::string options);
     virtual double getActivePos(Parameters &params);
-    virtual double getAvail(Parameters &params, std::__1::string currency);
+    virtual double getAvail(Parameters &params, std::string currency);
     virtual double getLimitPrice(Parameters &params, double volume, bool isBid);
     virtual quote_t getQuote(Parameters &params);
-    virtual bool isOrderComplete(Parameters &params, std::__1::string orderId);
-    virtual std::__1::string
-    sendLongOrder(Parameters &params, std::__1::string direction, double quantity, double price);
-    virtual std::__1::string
-    sendShortOrder(Parameters &params, std::__1::string direction, double quantity, double price);
-    virtual std::__1::string sendOrder(Parameters &params, std::__1::string direction, double quantity, double price);
+    virtual bool isOrderComplete(Parameters &params, std::string orderId);
+    virtual std::string sendLongOrder(Parameters &params, std::string direction, double quantity, double price);
+    virtual std::string sendShortOrder(Parameters &params, std::string direction, double quantity, double price);
+    virtual std::string sendOrder(Parameters &params, std::string direction, double quantity, double price);
 };
 
 #endif //BLACKBIRD_ABSTRACTEXCHANGE_H

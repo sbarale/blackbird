@@ -1,6 +1,6 @@
 #include "send_email.h"
-#include "result.h"
-#include "parameters.h"
+#include "components/result.h"
+#include "components/parameters.h"
 #include "time_fun.h"
 #include <sstream>
 
