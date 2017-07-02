@@ -1,7 +1,10 @@
 #include "bitstamp.h"
 #include "curl_fun.h"
 #include "unique_json.hpp"
-
+#include <openssl/sha.h>
+#include "bitstamp.h"
+#include "curl_fun.h"
+#include "unique_json.hpp"
 #include "openssl/sha.h"
 #include "openssl/hmac.h"
 #include <thread>
@@ -10,45 +13,35 @@
 #include <iomanip>
 
 Bitstamp::Bitstamp() {
-    std::cout << "Init BitStamp" << std::endl;
+    //std::cout << "Init BitStamp" << std::endl;
     exchange_name = "Bitstamp";
-    api_url       = "https://www.bitstamp.net";
-}
-
-quote_t Bitstamp::getQuote(Parameters &params) {
-    std::cout << "Calling getQuote() in class Bitstamp for " << exchange_name << std::endl;
-
-    auto        &exchange = queryHandle(params);
-    unique_json root{exchange.getRequest("/api/ticker")};
-    const char  *quote    = json_string_value(json_object_get(root.get(), "bid"));
-    auto        bidValue  = quote ? atof(quote) : 0.0;
-
-    quote                 = json_string_value(json_object_get(root.get(), "ask"));
-    auto askValue = quote ? atof(quote) : 0.0;
-
-    return std::make_pair(bidValue, askValue);
+    api.url                    = "https://www.bitstamp.net";
+    api.endpoint.auth          = "";
+    api.endpoint.balance       = "/api/balance/";
+    api.endpoint.order.book    = "/api/order_book/";
+    api.endpoint.order.new_one = "/api/";
+    api.endpoint.order.status  = "/api/order_status/";
+    api.endpoint.quote         = "/api/ticker/";
 }
 
 double Bitstamp::getAvail(Parameters &params, std::string currency) {
-    unique_json root{authRequest(params, "https://www.bitstamp.net/api/balance/", "")};
+    unique_json root{authRequest(params, api.url + api.endpoint.balance, "")};
     while (json_object_get(root.get(), "message") != NULL) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         auto dump = json_dumps(root.get(), 0);
-        *params.logFile << "<Bitstamp> Error with JSON: " << dump << ". Retrying..." << std::endl;
+        *params.logFile << exchange_name << " Error with JSON: " << dump << ". Retrying..." << std::endl;
         free(dump);
-        root.reset(authRequest(params, "https://www.bitstamp.net/api/balance/", ""));
+        root.reset(authRequest(params, api.url + api.endpoint.balance, ""));
     }
     double      availability  = 0.0;
     const char  *returnedText = NULL;
-    if (currency == "btc") {
-        returnedText = json_string_value(json_object_get(root.get(), "btc_balance"));
-    } else if (currency == "usd") {
-        returnedText = json_string_value(json_object_get(root.get(), "usd_balance"));
-    }
+    currency     = currency + "_balance";
+    returnedText = json_string_value(json_object_get(root.get(), currency.c_str()));
+
     if (returnedText != NULL) {
         availability = atof(returnedText);
     } else {
-        *params.logFile << "<Bitstamp> Error with the credentials." << std::endl;
+        *params.logFile << exchange_name << " Error with the credentials." << std::endl;
         availability = 0.0;
     }
 
@@ -60,7 +53,7 @@ std::string Bitstamp::sendLongOrder(Parameters &params, std::string direction, d
                     << std::setprecision(6) << quantity << "@$"
                     << std::setprecision(2) << price << "...\n";
     std::ostringstream oss;
-    oss << "https://www.bitstamp.net/api/" << direction << "/";
+    oss << api.url + api.endpoint.order.new_one << direction << "/";
     std::string url = oss.str();
     oss.clear();
     oss.str("");
@@ -83,7 +76,7 @@ bool Bitstamp::isOrderComplete(Parameters &params, std::string orderId) {
         return true;
 
     auto        options = "id=" + orderId;
-    unique_json root{authRequest(params, "https://www.bitstamp.net/api/order_status/", options)};
+    unique_json root{authRequest(params, api.url + api.endpoint.order.status, options)};
     std::string status  = json_string_value(json_object_get(root.get(), "status"));
     return status == "Finished";
 }
@@ -93,8 +86,8 @@ double Bitstamp::getActivePos(Parameters &params) {
 }
 
 double Bitstamp::getLimitPrice(Parameters &params, double volume, bool isBid) {
-    auto        &exchange = queryHandle(params);
-    unique_json root{exchange.getRequest("/api/order_book")};
+    auto        exchange  = queryHandle(params);
+    unique_json root{exchange.getRequest(api.endpoint.order.book)};
     auto        orderbook = json_object_get(root.get(), isBid ? "bids" : "asks");
 
     // loop on volume
