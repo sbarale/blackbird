@@ -15,23 +15,23 @@
 Bitstamp::Bitstamp() {
     //std::cout << "Init BitStamp" << std::endl;
     exchange_name = "Bitstamp";
-    api.url                    = "https://www.bitstamp.net";
-    api.endpoint.auth          = "";
-    api.endpoint.balance       = "/api/balance/";
-    api.endpoint.order.book    = "/api/order_book/";
-    api.endpoint.order.new_one = "/api/";
-    api.endpoint.order.status  = "/api/order_status/";
-    api.endpoint.quote         = "/api/ticker/";
+    config.api.url                    = "https://www.bitstamp.net";
+    config.api.endpoint.auth          = "";
+    config.api.endpoint.balance       = "/api/balance/";
+    config.api.endpoint.order.book    = "/api/order_book/";
+    config.api.endpoint.order.new_one = "/api/";
+    config.api.endpoint.order.status  = "/api/order_status/";
+    config.api.endpoint.quote         = "/api/ticker/";
 }
 
 double Bitstamp::getAvail(Parameters &params, std::string currency) {
-    unique_json root{authRequest(params, api.url + api.endpoint.balance, "")};
+    unique_json root{authRequest(params, config.api.url + config.api.endpoint.balance, "")};
     while (json_object_get(root.get(), "message") != NULL) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         auto dump = json_dumps(root.get(), 0);
         *params.logFile << exchange_name << " Error with JSON: " << dump << ". Retrying..." << std::endl;
         free(dump);
-        root.reset(authRequest(params, api.url + api.endpoint.balance, ""));
+        root.reset(authRequest(params, config.api.url + config.api.endpoint.balance, ""));
     }
     double      availability  = 0.0;
     const char  *returnedText = NULL;
@@ -53,7 +53,7 @@ std::string Bitstamp::sendLongOrder(Parameters &params, std::string direction, d
                     << std::setprecision(6) << quantity << "@$"
                     << std::setprecision(2) << price << "...\n";
     std::ostringstream oss;
-    oss << api.url + api.endpoint.order.new_one << direction << "/";
+    oss << config.api.url + config.api.endpoint.order.new_one << direction << "/";
     std::string url = oss.str();
     oss.clear();
     oss.str("");
@@ -76,7 +76,7 @@ bool Bitstamp::isOrderComplete(Parameters &params, std::string orderId) {
         return true;
 
     auto        options = "id=" + orderId;
-    unique_json root{authRequest(params, api.url + api.endpoint.order.status, options)};
+    unique_json root{authRequest(params, config.api.url + config.api.endpoint.order.status, options)};
     std::string status  = json_string_value(json_object_get(root.get(), "status"));
     return status == "Finished";
 }
@@ -87,7 +87,7 @@ double Bitstamp::getActivePos(Parameters &params) {
 
 double Bitstamp::getLimitPrice(Parameters &params, double volume, bool isBid) {
     auto        exchange  = queryHandle(params);
-    unique_json root{exchange.getRequest(api.endpoint.order.book)};
+    unique_json root{exchange.getRequest(config.api.endpoint.order.book)};
     auto        orderbook = json_object_get(root.get(), isBid ? "bids" : "asks");
 
     // loop on volume

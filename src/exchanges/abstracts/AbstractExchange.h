@@ -6,13 +6,13 @@
 #include <jansson.h>
 #include <utils/restapi.h>
 #include "components/quote_t.h"
-#include "ApiParameters.h"
+#include "exchanges/components/ApiParameters.h"
+#include "exchanges/components/ExchangeParameters.h"
 
 class AbstractExchange {
   public:
-    std::string   api_url;
-    std::string   exchange_name;
-    ApiParameters api;
+    std::string        exchange_name;
+    ExchangeParameters config;
     AbstractExchange();
     ~AbstractExchange();
 

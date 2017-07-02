@@ -14,7 +14,7 @@
 
 AbstractExchange::AbstractExchange() {
     exchange_name = "Abstract";
-    api.url = "NONE";
+    config.api.url = "NONE";
 }
 
 AbstractExchange::~AbstractExchange() {
@@ -23,7 +23,7 @@ AbstractExchange::~AbstractExchange() {
 
 quote_t AbstractExchange::getQuote(Parameters &params) {
     auto        exchange = queryHandle(params);
-    unique_json root{exchange.getRequest(api.endpoint.quote)};
+    unique_json root{exchange.getRequest(config.api.endpoint.quote)};
     const char  *quote   = json_string_value(json_object_get(root.get(), "bid"));
     auto        bidValue = quote ? atof(quote) : 0.0;
 
@@ -34,7 +34,7 @@ quote_t AbstractExchange::getQuote(Parameters &params) {
 }
 
 double AbstractExchange::getAvail(Parameters &params, std::string currency) {
-    unique_json root{authRequest(params, api.endpoint.balance, "")};
+    unique_json root{authRequest(params, config.api.endpoint.balance, "")};
     double      availability = 0.0;
     for (size_t i            = json_array_size(root.get()); i--;) {
         const char   *each_type, *each_currency, *each_amount;
@@ -75,7 +75,7 @@ AbstractExchange::sendOrder(Parameters &params, std::string direction, double qu
     oss << "\"symbol\":\"btcusd\", \"amount\":\"" << quantity << "\", \"price\":\"" << price
         << "\", \"exchange\":\"bitfinex\", \"side\":\"" << direction << "\", \"type\":\"limit\"";
     std::string options = oss.str();
-    unique_json root{authRequest(params, api.endpoint.order.new_one, options)};
+    unique_json root{authRequest(params, config.api.endpoint.order.new_one, options)};
     auto        orderId = std::to_string(json_integer_value(json_object_get(root.get(), "order_id")));
     *params.logFile << "<Bitfinex> Done (order ID: " << orderId << ")\n" << std::endl;
     return orderId;
@@ -86,12 +86,12 @@ bool AbstractExchange::isOrderComplete(Parameters &params, std::string orderId) 
         return true;
 
     auto        options = "\"order_id\":" + orderId;
-    unique_json root{authRequest(params, api.endpoint.order.status, options)};
+    unique_json root{authRequest(params, config.api.endpoint.order.status, options)};
     return json_is_false(json_object_get(root.get(), "is_live"));
 }
 
 double AbstractExchange::getActivePos(Parameters &params) {
-    unique_json root{authRequest(params, api.endpoint.positions, "")};
+    unique_json root{authRequest(params, config.api.endpoint.positions, "")};
     double      position;
     if (json_array_size(root.get()) == 0) {
         *params.logFile << "<Bitfinex> WARNING: BTC position not available, return 0.0" << std::endl;
@@ -104,7 +104,7 @@ double AbstractExchange::getActivePos(Parameters &params) {
 
 double AbstractExchange::getLimitPrice(Parameters &params, double volume, bool isBid) {
     auto        exchange = queryHandle(params);
-    unique_json root{exchange.getRequest(api.endpoint.order.book + "btcusd")};
+    unique_json root{exchange.getRequest(config.api.endpoint.order.book + "btcusd")};
     json_t      *bidask  = json_object_get(root.get(), isBid ? "bids" : "asks");
 
     *params.logFile << "<Bitfinex> Looking for a limit price to fill "
@@ -161,7 +161,7 @@ json_t *AbstractExchange::authRequest(Parameters &params, std::string request, s
 
 RestApi AbstractExchange::queryHandle(Parameters &params) {
     //std::cout << "Calling queryHandle in AbstractExchange for " << exchange_name << std::endl;
-    RestApi query(api.url,
+    RestApi query(config.api.url,
                   params.cacert.c_str(),
                   *params.logFile
     );

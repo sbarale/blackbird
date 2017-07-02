@@ -8,6 +8,12 @@
 #include <iostream>
 
 using namespace std;
+
+struct Auth {
+    string key;
+    string secret;
+    string client_id; // certain exchanges require this.
+};
 struct Order {
     string new_one;
     string book;

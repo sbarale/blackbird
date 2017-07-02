@@ -1,7 +1,7 @@
 #ifndef BITSTAMP_H
 #define BITSTAMP_H
 
-#include "AbstractExchange.h"
+#include "exchanges/abstracts/AbstractExchange.h"
 
 class Bitstamp : public AbstractExchange {
   public:

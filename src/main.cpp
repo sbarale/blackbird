@@ -1,7 +1,7 @@
 #include <iostream>       // std::cout, std::endl
 #include <iomanip>
 #include <thread>         // std::this_thread::sleep_for
-#include "exchanges/symbol.h"
+#include "components/symbol.h"
 #include "components/result.h"
 #include "utils/time_fun.h"
 #include "utils/curl_fun.h"
@@ -17,6 +17,8 @@
 
 void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile);
+void writeBalances(const Parameters &params, ofstream &logFile, int numExch, const vector<Balance, allocator<Balance>> &balance, bool inMarket);
+void verifyParameters( Parameters &params);
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
@@ -27,50 +29,12 @@ int main(int argc, char **argv) {
     std::locale mylocale("");
     // Loads all the parameters
     Parameters  params("blackbird.conf");
-    // Does some verifications about the parameters
-    if (!params.demoMode) {
-        if (!params.useFullExposure) {
-            if (params.testedExposure < 10.0 && params.leg2.compare("USD") == 0) {
-                // TODO do the same check for other currencies. Is there a limit ?
-                std::cout << "ERROR: Minimum USD needed: $10.00" << std::endl;
-                std::cout << "       Otherwise some exchanges will reject the orders\n" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            if (params.testedExposure > params.maxExposure) {
-                std::cout << "ERROR: Test exposure (" << params.testedExposure << ") is above max exposure ("
-                          << params.maxExposure << ")\n" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-
-    // Connects to the SQLite3 database.
-    // This database is used to collect bid and ask information
-    // from the exchanges. Not really used for the moment, but
-    // would be useful to collect historical bid/ask data.
-    if (createDbConnection(params) != 0) {
-        std::cerr << "ERROR: cannot connect to the database \'" << params.dbFile << "\'\n" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // We only trade BTC/USD and ETH/BTC for the moment
-    if (params.tradedPair().compare("BTC/USD") != 0 && params.tradedPair().compare("ETH/BTC") != 0) {
-        std::cout << "ERROR: Pair '" << params.tradedPair()
-                  << "' is unknown. Valid pairs for now are BTC/USD and ETH/BTC\n" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // ETH/BTC is not fully implemented yet, but the spreads are shown in Demo mode
-    if (params.tradedPair().compare("ETH/BTC") == 0 && !params.demoMode == false) {
-        std::cout << "ERROR: ETH/BTC is only available in Demo mode\n" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    verifyParameters(params);
 
     // Function arrays containing all the exchanges functions
     // using the 'typedef' declarations from above.
     std::string                               dbTableName[10];
     std::vector<AbstractExchange *>           pool;
-    std::vector<AbstractExchange *>::iterator pool_iterator;
 
     // Adds the exchange functions to the arrays for all the defined exchanges
     // Poloniex is only used if the traded pair is ETH/BTC as they don't
@@ -126,6 +90,8 @@ int main(int argc, char **argv) {
     logFile.imbue(mylocale);
     logFile.precision(2);
     logFile << std::fixed;
+
+
     params.logFile = &logFile;
     // Log file header
     logFile << "--------------------------------------------" << std::endl;
@@ -144,6 +110,9 @@ int main(int argc, char **argv) {
 
     std::cout << "Log file generated: " << logFileName << "\nBlackbird is running... (pid " << getpid() << ")\n"
               << std::endl;
+
+
+
     int                 numExch = params.nbExch();
 
     // The exchanges vector contains details about every exchange,
@@ -199,24 +168,8 @@ int main(int argc, char **argv) {
     Result                         res;
     res.reset();
     bool     inMarket = res.loadPartialResult("restore.txt");
+    writeBalances(params, logFile, numExch, balance, inMarket);
 
-    // Writes the current balances into the log file
-    for (int i        = 0; i < numExch; ++i) {
-        logFile << "   " << params.exchName[i] << ":\t";
-        if (params.demoMode) {
-            logFile << "n/a (demo mode)" << std::endl;
-        } else if (!params.isImplemented[i]) {
-            logFile << "n/a (API not implemented)" << std::endl;
-        } else {
-            logFile << std::setprecision(2) << balance[i].leg2 << " " << params.leg2 << "\t"
-                    << std::setprecision(6) << balance[i].leg1 << " " << params.leg1 << std::endl;
-        }
-        if (balance[i].leg1 > 0.0050 && !inMarket) { // FIXME: hard-coded number
-            logFile << "ERROR: All " << params.leg1 << " accounts must be empty before starting Blackbird" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-    }
-    logFile << std::endl;
     logFile << "[ Cash exposure ]\n";
     if (params.demoMode) {
         logFile << "   No cash - Demo mode\n";
@@ -566,6 +519,66 @@ int main(int argc, char **argv) {
     logFile.close();
 
     return 0;
+}
+
+void verifyParameters( Parameters &params) {// Does some verifications about the parameters
+    if (!params.demoMode) {
+        if (!params.useFullExposure) {
+            if (params.testedExposure < 10.0 && params.leg2.compare("USD") == 0) {
+                // TODO do the same check for other currencies. Is there a limit ?
+                cout << "ERROR: Minimum USD needed: $10.00" << endl;
+                cout << "       Otherwise some exchanges will reject the orders\n" << endl;
+                exit(EXIT_FAILURE);
+            }
+            if (params.testedExposure > params.maxExposure) {
+                cout << "ERROR: Test exposure (" << params.testedExposure << ") is above max exposure ("
+                          << params.maxExposure << ")\n" << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    // Connects to the SQLite3 database.
+    // This database is used to collect bid and ask information
+    // from the exchanges. Not really used for the moment, but
+    // would be useful to collect historical bid/ask data.
+    if (createDbConnection(params) != 0) {
+        std::cerr << "ERROR: cannot connect to the database \'" << params.dbFile << "\'\n" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // We only trade BTC/USD and ETH/BTC for the moment
+    if (params.tradedPair().compare("BTC/USD") != 0 && params.tradedPair().compare("ETH/BTC") != 0) {
+        std::cout << "ERROR: Pair '" << params.tradedPair()
+                  << "' is unknown. Valid pairs for now are BTC/USD and ETH/BTC\n" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // ETH/BTC is not fully implemented yet, but the spreads are shown in Demo mode
+    if (params.tradedPair().compare("ETH/BTC") == 0 && !params.demoMode == false) {
+        std::cout << "ERROR: ETH/BTC is only available in Demo mode\n" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+}
+
+void writeBalances(const Parameters &params, ofstream &logFile, int numExch, const vector<Balance, allocator<Balance>> &balance, bool inMarket) {// Writes the current balances into the log file
+    for (int i        = 0; i < numExch; ++i) {
+        logFile << "   " << params.exchName[i] << ":\t";
+        if (params.demoMode) {
+            logFile << "n/a (demo mode)" << endl;
+        } else if (!params.isImplemented[i]) {
+            logFile << "n/a (API not implemented)" << endl;
+        } else {
+            logFile << setprecision(2) << balance[i].leg2 << " " << params.leg2 << "\t"
+                    << setprecision(6) << balance[i].leg1 << " " << params.leg1 << endl;
+        }
+        if (balance[i].leg1 > 0.0050 && !inMarket) { // FIXME: hard-coded number
+            logFile << "ERROR: All " << params.leg1 << " accounts must be empty before starting Blackbird" << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+    logFile << endl;
 }
 
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile) {

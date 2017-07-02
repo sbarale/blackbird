@@ -296,32 +296,59 @@ src/components/result.cpp.s:
 	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/components/result.cpp.s
 .PHONY : src/components/result.cpp.s
 
-src/exchanges/AbstractExchange.o: src/exchanges/AbstractExchange.cpp.o
+src/components/symbol.o: src/components/symbol.cpp.o
 
-.PHONY : src/exchanges/AbstractExchange.o
+.PHONY : src/components/symbol.o
 
 # target to build an object file
-src/exchanges/AbstractExchange.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/AbstractExchange.cpp.o
-.PHONY : src/exchanges/AbstractExchange.cpp.o
+src/components/symbol.cpp.o:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/components/symbol.cpp.o
+.PHONY : src/components/symbol.cpp.o
 
-src/exchanges/AbstractExchange.i: src/exchanges/AbstractExchange.cpp.i
+src/components/symbol.i: src/components/symbol.cpp.i
 
-.PHONY : src/exchanges/AbstractExchange.i
+.PHONY : src/components/symbol.i
 
 # target to preprocess a source file
-src/exchanges/AbstractExchange.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/AbstractExchange.cpp.i
-.PHONY : src/exchanges/AbstractExchange.cpp.i
+src/components/symbol.cpp.i:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/components/symbol.cpp.i
+.PHONY : src/components/symbol.cpp.i
 
-src/exchanges/AbstractExchange.s: src/exchanges/AbstractExchange.cpp.s
+src/components/symbol.s: src/components/symbol.cpp.s
 
-.PHONY : src/exchanges/AbstractExchange.s
+.PHONY : src/components/symbol.s
 
 # target to generate assembly for a file
-src/exchanges/AbstractExchange.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/AbstractExchange.cpp.s
-.PHONY : src/exchanges/AbstractExchange.cpp.s
+src/components/symbol.cpp.s:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/components/symbol.cpp.s
+.PHONY : src/components/symbol.cpp.s
+
+src/exchanges/abstracts/AbstractExchange.o: src/exchanges/abstracts/AbstractExchange.cpp.o
+
+.PHONY : src/exchanges/abstracts/AbstractExchange.o
+
+# target to build an object file
+src/exchanges/abstracts/AbstractExchange.cpp.o:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/abstracts/AbstractExchange.cpp.o
+.PHONY : src/exchanges/abstracts/AbstractExchange.cpp.o
+
+src/exchanges/abstracts/AbstractExchange.i: src/exchanges/abstracts/AbstractExchange.cpp.i
+
+.PHONY : src/exchanges/abstracts/AbstractExchange.i
+
+# target to preprocess a source file
+src/exchanges/abstracts/AbstractExchange.cpp.i:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/abstracts/AbstractExchange.cpp.i
+.PHONY : src/exchanges/abstracts/AbstractExchange.cpp.i
+
+src/exchanges/abstracts/AbstractExchange.s: src/exchanges/abstracts/AbstractExchange.cpp.s
+
+.PHONY : src/exchanges/abstracts/AbstractExchange.s
+
+# target to generate assembly for a file
+src/exchanges/abstracts/AbstractExchange.cpp.s:
+	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/abstracts/AbstractExchange.cpp.s
+.PHONY : src/exchanges/abstracts/AbstractExchange.cpp.s
 
 src/exchanges/bitfinex.o: src/exchanges/bitfinex.cpp.o
 
@@ -376,33 +403,6 @@ src/exchanges/bitstamp.s: src/exchanges/bitstamp.cpp.s
 src/exchanges/bitstamp.cpp.s:
 	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/bitstamp.cpp.s
 .PHONY : src/exchanges/bitstamp.cpp.s
-
-src/exchanges/symbol.o: src/exchanges/symbol.cpp.o
-
-.PHONY : src/exchanges/symbol.o
-
-# target to build an object file
-src/exchanges/symbol.cpp.o:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/symbol.cpp.o
-.PHONY : src/exchanges/symbol.cpp.o
-
-src/exchanges/symbol.i: src/exchanges/symbol.cpp.i
-
-.PHONY : src/exchanges/symbol.i
-
-# target to preprocess a source file
-src/exchanges/symbol.cpp.i:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/symbol.cpp.i
-.PHONY : src/exchanges/symbol.cpp.i
-
-src/exchanges/symbol.s: src/exchanges/symbol.cpp.s
-
-.PHONY : src/exchanges/symbol.s
-
-# target to generate assembly for a file
-src/exchanges/symbol.cpp.s:
-	$(MAKE) -f CMakeFiles/blackbird.dir/build.make CMakeFiles/blackbird.dir/src/exchanges/symbol.cpp.s
-.PHONY : src/exchanges/symbol.cpp.s
 
 src/main.o: src/main.cpp.o
 
@@ -619,18 +619,18 @@ help:
 	@echo "... src/components/result.o"
 	@echo "... src/components/result.i"
 	@echo "... src/components/result.s"
-	@echo "... src/exchanges/AbstractExchange.o"
-	@echo "... src/exchanges/AbstractExchange.i"
-	@echo "... src/exchanges/AbstractExchange.s"
+	@echo "... src/components/symbol.o"
+	@echo "... src/components/symbol.i"
+	@echo "... src/components/symbol.s"
+	@echo "... src/exchanges/abstracts/AbstractExchange.o"
+	@echo "... src/exchanges/abstracts/AbstractExchange.i"
+	@echo "... src/exchanges/abstracts/AbstractExchange.s"
 	@echo "... src/exchanges/bitfinex.o"
 	@echo "... src/exchanges/bitfinex.i"
 	@echo "... src/exchanges/bitfinex.s"
 	@echo "... src/exchanges/bitstamp.o"
 	@echo "... src/exchanges/bitstamp.i"
 	@echo "... src/exchanges/bitstamp.s"
-	@echo "... src/exchanges/symbol.o"
-	@echo "... src/exchanges/symbol.i"
-	@echo "... src/exchanges/symbol.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

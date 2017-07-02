@@ -1,5 +1,5 @@
 #include "check_entry_exit.h"
-#include "exchanges/symbol.h"
+#include "symbol.h"
 #include "components/result.h"
 #include "components/parameters.h"
 #include <sstream>

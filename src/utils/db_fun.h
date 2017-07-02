@@ -5,7 +5,7 @@
 
 struct Parameters;
 
-int createDbConnection(Parameters& params);
+int createDbConnection( Parameters& params);
 
 int createTable(std::string exchangeName, Parameters& params);
 

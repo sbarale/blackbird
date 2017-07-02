@@ -1,7 +1,7 @@
 #ifndef BITFINEX_H
 #define BITFINEX_H
 
-#include "AbstractExchange.h"
+#include "exchanges/abstracts/AbstractExchange.h"
 
 class Bitfinex : public AbstractExchange {
   public:

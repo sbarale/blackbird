@@ -4,14 +4,14 @@
 Bitfinex::Bitfinex() {
     //std::cout << "Init Bitfinex" << std::endl;
     exchange_name = "Bitfinex";
-    api.url                    = "https://api.bitfinex.com";
-    api.endpoint.auth          = "";
-    api.endpoint.balance       = "";
-    api.endpoint.order.book    = "/v1/book/";
-    api.endpoint.order.new_one = "/v1/order/new/";
-    api.endpoint.order.status  = "/v1/order/status/";
-    api.endpoint.quote         = "/v1/ticker/";
-    api.endpoint.positions     = "/v1/positions";
+    config.api.url                    = "https://api.bitfinex.com";
+    config.api.endpoint.auth          = "";
+    config.api.endpoint.balance       = "";
+    config.api.endpoint.order.book    = "/v1/book/";
+    config.api.endpoint.order.new_one = "/v1/order/new/";
+    config.api.endpoint.order.status  = "/v1/order/status/";
+    config.api.endpoint.quote         = "/v1/ticker/";
+    config.api.endpoint.positions     = "/v1/positions";
 
 }
 
@@ -21,9 +21,9 @@ quote_t Bitfinex::getQuote(Parameters &params) {
     // Added to handle ethbtc on bitfinex
     std::string url;
     if (params.tradedPair().compare("BTC/USD") == 0) {
-        url = api.endpoint.quote + "btcusd";
+        url = config.api.endpoint.quote + "btcusd";
     } else if (params.tradedPair().compare("ETH/BTC") == 0) {
-        url = api.endpoint.quote + "ethbtc";
+        url = config.api.endpoint.quote + "ethbtc";
     }
     unique_json root{exchange.getRequest(url)};
     const char  *quote   = json_string_value(json_object_get(root.get(), "bid"));
