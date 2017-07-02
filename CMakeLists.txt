@@ -15,6 +15,7 @@ file(GLOB SOURCES
         src/components/*.cpp
         src/exchanges/*.cpp
         src/exchanges/abstracts/*.cpp
+        src/exchanges/components/*.cpp
         src/utils/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES} src/exchanges/components/ApiParameters.h src/exchanges/components/ExchangeParameters.h)
 

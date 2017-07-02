@@ -56,18 +56,15 @@ double AbstractExchange::getAvail(Parameters &params, std::string currency) {
     return availability;
 }
 
-std::string
-AbstractExchange::sendLongOrder(Parameters &params, std::string direction, double quantity, double price) {
+std::string AbstractExchange::sendLongOrder(Parameters &params, std::string direction, double quantity, double price) {
     return sendOrder(params, direction, quantity, price);
 }
 
-std::string
-AbstractExchange::sendShortOrder(Parameters &params, std::string direction, double quantity, double price) {
+std::string AbstractExchange::sendShortOrder(Parameters &params, std::string direction, double quantity, double price) {
     return sendOrder(params, direction, quantity, price);
 }
 
-std::string
-AbstractExchange::sendOrder(Parameters &params, std::string direction, double quantity, double price) {
+std::string AbstractExchange::sendOrder(Parameters &params, std::string direction, double quantity, double price) {
     *params.logFile << "<Bitfinex> Trying to send a \"" << direction << "\" limit order: "
                     << std::setprecision(6) << quantity << "@$"
                     << std::setprecision(2) << price << "...\n";

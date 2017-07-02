@@ -19,6 +19,9 @@ void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocat
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile);
 void writeBalances(const Parameters &params, ofstream &logFile, int numExch, const vector<Balance, allocator<Balance>> &balance, bool inMarket);
 void verifyParameters( Parameters &params);
+void checkTimeslot(const Parameters &params, const Result &res, bool inMarket, time_t &rawtime, time_t diffTime, ofstream &logFile, tm &timeinfo, time_t &currTime);
+void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<AbstractExchange *, allocator<AbstractExchange *>> &pool);
+void logCashExposure( Parameters &params, ofstream &logFile);
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
@@ -35,47 +38,8 @@ int main(int argc, char **argv) {
     // using the 'typedef' declarations from above.
     std::string                               dbTableName[10];
     std::vector<AbstractExchange *>           pool;
+    loadExchangesConfiguration(params, dbTableName, pool);
 
-    // Adds the exchange functions to the arrays for all the defined exchanges
-    // Poloniex is only used if the traded pair is ETH/BTC as they don't
-    // deal with USD.
-    // TODO: should be in a separated function, and there probably is a better
-    // way to implement that.
-
-    int                                       index = 0;
-    if (params.bitfinexEnable &&
-        (params.bitfinexApi.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("Bitfinex", params.bitfinexFees, true, true);
-
-        pool.push_back(new Bitfinex);
-
-        // TODO: All this is irrelevant. Use directly function calls in the loop
-        dbTableName[index] = "bitfinex";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
-
-    if (params.bitstampEnable &&
-        (params.bitstampClientId.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("Bitstamp", params.bitstampFees, false, true);
-
-        pool.push_back(new Bitstamp);
-        dbTableName[index] = "bitstamp";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
-
-    // We need at least two exchanges to run Blackbird
-    if (index < 2) {
-        std::cout
-                << "ERROR: Blackbird needs at least two Bitcoin exchanges. Please edit the config.json file to add new exchanges\n"
-                << std::endl;
-        exit(EXIT_FAILURE);
-    }
     // Creates the CSV file that will collect the trade results
     std::string   currDateTime = printDateTimeFileName();
     std::string   csvFileName  = "output/blackbird_result_" + currDateTime + ".csv";
@@ -90,7 +54,6 @@ int main(int argc, char **argv) {
     logFile.imbue(mylocale);
     logFile.precision(2);
     logFile << std::fixed;
-
 
     params.logFile = &logFile;
     // Log file header
@@ -107,11 +70,8 @@ int main(int argc, char **argv) {
 
     // Shows which pair we are trading (e.g. BTC/USD)
     logFile << "Pair traded: " << params.tradedPair() << "\n" << std::endl;
-
     std::cout << "Log file generated: " << logFileName << "\nBlackbird is running... (pid " << getpid() << ")\n"
               << std::endl;
-
-
 
     int                 numExch = params.nbExch();
 
@@ -170,18 +130,7 @@ int main(int argc, char **argv) {
     bool     inMarket = res.loadPartialResult("restore.txt");
     writeBalances(params, logFile, numExch, balance, inMarket);
 
-    logFile << "[ Cash exposure ]\n";
-    if (params.demoMode) {
-        logFile << "   No cash - Demo mode\n";
-    } else {
-        if (params.useFullExposure) {
-            logFile << "   FULL exposure used!\n";
-        } else {
-            logFile << "   TEST exposure used\n   Value: "
-                    << std::setprecision(2) << params.testedExposure << '\n';
-        }
-    }
-    logFile << std::endl;
+    logCashExposure(params, logFile);
     // Code implementing the loop function, that runs
     // every 'Interval' seconds.
     time_t rawtime  = time(nullptr);
@@ -207,30 +156,7 @@ int main(int argc, char **argv) {
 
     // Main analysis loop
     while (stillRunning) {
-        currTime = mktime(&timeinfo);
-        time(&rawtime);
-        diffTime   = difftime(rawtime, currTime);
-        // Checks if we are already too late in the current iteration
-        // If that's the case we wait until the next iteration
-        // and we show a warning in the log file.
-        if (diffTime > 0) {
-            logFile << "WARNING: " << diffTime << " second(s) too late at " << printDateTime(currTime) << std::endl;
-            timeinfo.tm_sec += (std::ceil(diffTime / params.interval) + 1) * params.interval;
-            currTime = mktime(&timeinfo);
-            sleep_for(secs(params.interval - (diffTime % params.interval)));
-            logFile << std::endl;
-        } else if (diffTime < 0) {
-            sleep_for(secs(-diffTime));
-        }
-        // Header for every iteration of the loop
-        if (params.verbose) {
-            if (!inMarket) {
-                logFile << "[ " << printDateTime(currTime) << " ]" << std::endl;
-            } else {
-                logFile << "[ " << printDateTime(currTime) << " IN MARKET: Long " << res.exchNameLong << " / Short "
-                        << res.exchNameShort << " ]" << std::endl;
-            }
-        }
+        checkTimeslot(params, res, inMarket, rawtime, diffTime, logFile, timeinfo, currTime);
         getBidAndAskPrices(dbTableName, pool, numExch, symbol, currTime, params, logFile);
         if (params.verbose) {
             logFile << "   ----------------------------" << std::endl;
@@ -519,6 +445,90 @@ int main(int argc, char **argv) {
     logFile.close();
 
     return 0;
+}
+
+void logCashExposure( Parameters &params, ofstream &logFile) {
+    logFile << "[ Cash exposure ]\n";
+    if (params.demoMode) {
+        logFile << "   No cash - Demo mode\n";
+    } else {
+        if (params.useFullExposure) {
+            logFile << "   FULL exposure used!\n";
+        } else {
+            logFile << "   TEST exposure used\n   Value: "
+                    << setprecision(2) << params.testedExposure << '\n';
+        }
+    }
+    logFile << endl;
+}
+
+void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<AbstractExchange *, allocator<AbstractExchange *>> &pool) {// Adds the exchange functions to the arrays for all the defined exchanges
+    // Poloniex is only used if the traded pair is ETH/BTC as they don't
+    // deal with USD.
+    // TODO: should be in a separated function, and there probably is a better
+    // way to implement that.
+
+    int                                       index = 0;
+    if (params.bitfinexEnable &&
+        (params.bitfinexApi.empty() == false ||
+         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
+        params.addExchange("Bitfinex", params.bitfinexFees, true, true);
+
+        pool.push_back(new Bitfinex);
+
+        // TODO: All this is irrelevant. Use directly function calls in the loop
+        dbTableName[index] = "bitfinex";
+        createTable(dbTableName[index], params);
+
+        index++;
+    }
+
+    if (params.bitstampEnable &&
+        (params.bitstampClientId.empty() == false ||
+         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
+        params.addExchange("Bitstamp", params.bitstampFees, false, true);
+
+        pool.push_back(new Bitstamp);
+        dbTableName[index] = "bitstamp";
+        createTable(dbTableName[index], params);
+
+        index++;
+    }
+
+    // We need at least two exchanges to run Blackbird
+    if (index < 2) {
+        cout
+                << "ERROR: Blackbird needs at least two Bitcoin exchanges. Please edit the config.json file to add new exchanges\n"
+                << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+void checkTimeslot(const Parameters &params, const Result &res, bool inMarket, time_t &rawtime, time_t diffTime, ofstream &logFile, tm &timeinfo, time_t &currTime) {
+    currTime = mktime(&timeinfo);
+    time(&rawtime);
+    diffTime   = difftime(rawtime, currTime);
+    // Checks if we are already too late in the current iteration
+    // If that's the case we wait until the next iteration
+    // and we show a warning in the log file.
+    if (diffTime > 0) {
+            logFile << "WARNING: " << diffTime << " second(s) too late at " << printDateTime(currTime) << endl;
+            timeinfo.tm_sec += (ceil(diffTime / params.interval) + 1) * params.interval;
+            currTime = mktime(&timeinfo);
+            this_thread::sleep_for(std::chrono::seconds(params.interval - (diffTime % params.interval)));
+            logFile << endl;
+        } else if (diffTime < 0) {
+            this_thread::sleep_for(std::chrono::seconds(-diffTime));
+        }
+    // Header for every iteration of the loop
+    if (params.verbose) {
+            if (!inMarket) {
+                logFile << "[ " << printDateTime(currTime) << " ]" << endl;
+            } else {
+                logFile << "[ " << printDateTime(currTime) << " IN MARKET: Long " << res.exchNameLong << " / Short "
+                        << res.exchNameShort << " ]" << endl;
+            }
+        }
 }
 
 void verifyParameters( Parameters &params) {// Does some verifications about the parameters
