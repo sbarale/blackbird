@@ -27,8 +27,8 @@ public:
 
   RestApi              (string host, const char *cacert = nullptr,
                         std::ostream &log = std::cerr);
-  RestApi              (const RestApi &) = delete;
-  RestApi& operator =  (const RestApi &) = delete;
+  //RestApi              (const RestApi &) = delete;
+  //RestApi& operator =  (const RestApi &) = delete;
 
   json_t* getRequest   (const string &uri, unique_slist headers = nullptr);
   json_t* postRequest  (const string &uri, unique_slist headers = nullptr,
