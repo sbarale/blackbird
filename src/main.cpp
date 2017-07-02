@@ -16,6 +16,7 @@
 #include <cmath>
 
 void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
+void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile);
 
 // 'main' function.
 // Blackbird doesn't require any arguments for now.
@@ -147,8 +148,8 @@ int main(int argc, char **argv) {
 
     // The exchanges vector contains details about every exchange,
     // like fees, as specified in exchanges.h
-    std::vector<Symbol> coins;
-    loadExchanges(params, numExch, coins);
+    std::vector<Symbol> symbol;
+    loadExchanges(params, numExch, symbol);
 
     // Inits cURL connections
     params.curl = curl_easy_init();
@@ -171,7 +172,6 @@ int main(int argc, char **argv) {
     // Gets the the balances from every exchange
     // This is only done when not in Demo mode.
     std::vector<Balance>           balance(numExch);
-    std::vector<Balance>::iterator bi;
     if (!params.demoMode) {
         // TODO: Iterate through the pool vector and pull the balances.
 
@@ -278,37 +278,7 @@ int main(int argc, char **argv) {
                         << res.exchNameShort << " ]" << std::endl;
             }
         }
-        // Gets the bid and ask of all the exchanges
-        for (int i = 0; i < numExch; ++i) {
-            AbstractExchange *e    = pool[i];
-            quote_t          quote = e->getQuote(params);
-            double           bid   = quote.bid();
-            double           ask   = quote.ask();
-
-            // Saves the bid/ask into the SQLite database
-            addBidAskToDb(dbTableName[i], printDateTimeDb(currTime), bid, ask, params);
-
-            // If there is an error with the bid or ask (i.e. value is null),
-            // we show a warning but we don't stop the loop.
-            if (bid == 0.0) {
-                logFile << "   WARNING: " << params.exchName[i] << " bid is null" << std::endl;
-            }
-            if (ask == 0.0) {
-                logFile << "   WARNING: " << params.exchName[i] << " ask is null" << std::endl;
-            }
-            // Shows the bid/ask information in the log file
-            if (params.verbose) {
-                logFile << "   " << params.exchName[i] << ": \t"
-                        << std::setprecision(4)
-                        << bid << " / " << ask << std::endl;
-                // TODO: precision should be:
-                // 2 for USD
-                // 4 for cryptocurrencies
-            }
-            // Updates the Bitcoin vector with the latest bid/ask data
-            coins[i].updateData(quote);
-            curl_easy_reset(params.curl);
-        }
+        getBidAndAskPrices(dbTableName, pool, numExch, symbol, currTime, params, logFile);
         if (params.verbose) {
             logFile << "   ----------------------------" << std::endl;
         }
@@ -319,9 +289,9 @@ int main(int argc, char **argv) {
             for (int i = 0; i < numExch; ++i) {
                 for (int j = 0; j < numExch; ++j) {
                     if (i != j) {
-                        if (coins[j].getHasShort()) {
-                            double longMidPrice  = coins[i].getMidPrice();
-                            double shortMidPrice = coins[j].getMidPrice();
+                        if (symbol[j].getHasShort()) {
+                            double longMidPrice  = symbol[i].getMidPrice();
+                            double shortMidPrice = symbol[j].getMidPrice();
                             if (longMidPrice > 0.0 && shortMidPrice > 0.0) {
                                 if (res.volatility[i][j].size() >= params.volatilityPeriod) {
                                     res.volatility[i][j].pop_back();
@@ -338,7 +308,7 @@ int main(int argc, char **argv) {
             for (int i = 0; i < numExch; ++i) {
                 for (int j = 0; j < numExch; ++j) {
                     if (i != j) {
-                        if (checkEntry(&coins[i], &coins[j], res, params)) {
+                        if (checkEntry(&symbol[i], &symbol[j], res, params)) {
                             // An entry opportunity has been found!
                             res.exposure = std::min(balance[res.idExchLong].leg2, balance[res.idExchShort].leg2);
                             if (params.demoMode) {
@@ -375,8 +345,8 @@ int main(int argc, char **argv) {
                             }
                             // Checks the volumes and, based on that, computes the limit prices
                             // that will be sent to the exchanges
-                            double volumeLong    = res.exposure / coins[res.idExchLong].getAsk();
-                            double volumeShort   = res.exposure / coins[res.idExchShort].getBid();
+                            double volumeLong    = res.exposure / symbol[res.idExchLong].getAsk();
+                            double volumeShort   = res.exposure / symbol[res.idExchShort].getBid();
                             double limPriceLong  = pool[res.idExchLong]->getLimitPrice(params, volumeLong, false);
                             double limPriceShort = pool[res.idExchShort]->getLimitPrice(params, volumeShort, true);
                             if (limPriceLong == 0.0 || limPriceShort == 0.0) {
@@ -457,7 +427,7 @@ int main(int argc, char **argv) {
             }
         } else if (inMarket) {
             // We are in market and looking for an exit opportunity
-            if (checkExit(&coins[res.idExchLong], &coins[res.idExchShort], res, params, currTime)) {
+            if (checkExit(&symbol[res.idExchLong], &symbol[res.idExchShort], res, params, currTime)) {
                 // An exit opportunity has been found!
                 // We check the current leg1 exposure
                 std::vector<double> btcUsed(numExch);
@@ -596,6 +566,40 @@ int main(int argc, char **argv) {
     logFile.close();
 
     return 0;
+}
+
+void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile) {
+    // Gets the bid and ask of all the exchanges
+    for (int i = 0; i < numExch; ++i) {
+            AbstractExchange *e    = pool[i];
+            quote_t          quote = e->getQuote(params);
+            double           bid   = quote.bid();
+            double           ask   = quote.ask();
+
+            // Saves the bid/ask into the SQLite database
+            addBidAskToDb(dbTableName[i], printDateTimeDb(currTime), bid, ask, params);
+
+            // If there is an error with the bid or ask (i.e. value is null),
+            // we show a warning but we don't stop the loop.
+            if (bid == 0.0) {
+                logFile << "   WARNING: " << params.exchName[i] << " bid is null" << endl;
+            }
+            if (ask == 0.0) {
+                logFile << "   WARNING: " << params.exchName[i] << " ask is null" << endl;
+            }
+            // Shows the bid/ask information in the log file
+            if (params.verbose) {
+                logFile << "   " << params.exchName[i] << ": \t"
+                        << setprecision(4)
+                        << bid << " / " << ask << endl;
+                // TODO: precision should be:
+                // 2 for USD
+                // 4 for cryptocurrencies
+            }
+            // Updates the Bitcoin vector with the latest bid/ask data
+            symbol[i].updateData(quote);
+            curl_easy_reset(params.curl);
+        }
 }
 
 void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges) {
