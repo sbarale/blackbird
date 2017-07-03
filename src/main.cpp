@@ -9,17 +9,24 @@
 #include "components/parameters.h"
 #include "components/check_entry_exit.h"
 #include "exchanges/bitfinex.h"
-#include "exchanges/bitstamp.h"
 #include "utils/send_email.h"
 #include "utils/utils.h"
 #include <unistd.h>
 #include <cmath>
 #include "exchanges/btce.h"
 #include "utils/ExchangeFactory.h"
+#include <signal.h>
 
 using std::this_thread::sleep_for;
 using millisecs = std::chrono::milliseconds;
 using secs      = std::chrono::seconds;
+
+static bool interrupted = false;
+
+void int_handler(int s) {
+    std::cout << "Interrupted, cleaning up..." << std::endl;
+    interrupted = true;
+}
 
 void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile);
@@ -38,6 +45,13 @@ bool computeLimitPricesBasedOnVolume(const vector<AbstractExchange *, allocator<
 
 // 'main' function.
 int main(int argc, char **argv) {
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = int_handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, NULL);
 
     std::cout << "Blackbird Bitcoin Arbitrage" << std::endl;
     std::cout << "DISCLAIMER: USE THE SOFTWARE AT YOUR OWN RISK\n" << std::endl;
@@ -136,7 +150,7 @@ int main(int argc, char **argv) {
     waitToStart(params, logFile, rawtime, timeinfo);
 
     // Main analysis loop
-    while (stillRunning) {
+    while (stillRunning && !interrupted) {
         checkTimeslot(params, res, inMarket, rawtime, diffTime, logFile, timeinfo, currTime);
         getBidAndAskPrices(dbTableName, pool, numExch, symbol, currTime, params, logFile);
         computeVolatility(params, numExch, symbol, res);
@@ -225,6 +239,12 @@ int main(int argc, char **argv) {
         }
     }
     // Analysis loop exited, does some cleanup
+
+    for (int i             = 0; i < pool.size(); i++) {
+        std::cout << "Deleting " << pool[i]->exchange_name << " instance." << std::endl;
+        delete (pool[i]);
+    }
+
     curl_easy_cleanup(params.curl);
     csvFile.close();
     logFile.close();
@@ -524,8 +544,8 @@ void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<
     // way to implement that.
     int      index = 0;
     for (int i     = 0; i < params.exchanges.size(); ++i) {
-        AbstractExchange* e = ExchangeFactory::make(params.exchanges[i]);
-        if(e->config.enabled){
+        AbstractExchange *e = ExchangeFactory::make(params.exchanges[i]);
+        if (e->config.enabled) {
             pool.push_back(e);
             params.addExchange(params.exchanges[i], e->config.fees.transaction, true, true);
             dbTableName[index] = e->exchange_name;
