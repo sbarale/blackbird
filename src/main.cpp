@@ -538,10 +538,7 @@ void logCashExposure(Parameters &params, ofstream &logFile) {
 }
 
 void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<AbstractExchange *, allocator<AbstractExchange *>> &pool) {// Adds the exchange functions to the arrays for all the defined exchanges
-    // Poloniex is only used if the traded pair is ETH/BTC as they don't
-    // deal with USD.
-    // TODO: should be in a separated function, and there probably is a better
-    // way to implement that.
+    // TODO: Limit the exchanges according to the pair being traded
     int      index = 0;
     for (int i     = 0; i < params.exchanges.size(); ++i) {
         AbstractExchange *e = ExchangeFactory::make(params.exchanges[i]);
@@ -553,45 +550,6 @@ void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<
             index++;
         }
     }
-    //
-    //;
-    //if (params.bitfinexEnable &&
-    //    (params.bitfinexApi.empty() == false ||
-    //     (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-    //    params.addExchange("Bitfinex", params.bitfinexFees, true, true);
-    //
-    //    pool.push_back(new Bitfinex);
-    //
-    //    // TODO: All this is irrelevant. Use directly function calls in the loop
-    //    dbTableName[index] = "bitfinex";
-    //    createTable(dbTableName[index], params);
-    //
-    //    index++;
-    //}
-    //
-    //if (params.bitstampEnable &&
-    //    (params.bitstampClientId.empty() == false ||
-    //     (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-    //    params.addExchange("Bitstamp", params.bitstampFees, false, true);
-    //
-    //    pool.push_back(new Bitstamp);
-    //    dbTableName[index] = "bitstamp";
-    //    createTable(dbTableName[index], params);
-    //
-    //    index++;
-    //}
-    //
-    //if (params.btceEnable &&
-    //    (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0)) {
-    //    params.addExchange("BTCE", params.btceFees, false, true);
-    //
-    //    pool.push_back(new BTCe());
-    //    dbTableName[index] = "btce";
-    //    createTable(dbTableName[index], params);
-    //
-    //    index++;
-    //}
-
 
     // We need at least two exchanges to run Blackbird
     if (index < 2) {
@@ -730,7 +688,6 @@ void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocat
     exchanges.reserve(numExch);
     // Creates a new Symbol structure within exchanges for every exchange we want to trade on
     for (int i = 0; i < numExch; ++i) {
-        exchanges.push_back(
-                Symbol(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
+        exchanges.push_back(Symbol(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
     }
 }
