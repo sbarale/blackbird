@@ -168,7 +168,7 @@ RestApi AbstractExchange::queryHandle(Parameters &params) {
 json_t *AbstractExchange::checkResponse(std::ostream &logFile, json_t *root) {
     auto msg = json_object_get(root, "message");
     if (msg) {
-        logFile << "<AbstractExchange> Error with response: "
+        logFile << exchange_name <<  " Error with response: "
                 << json_string_value(msg) << '\n';
     }
     return root;
