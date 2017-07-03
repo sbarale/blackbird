@@ -4,9 +4,13 @@
 #include "ApiParameters.h"
 #include <iostream>
 
+struct Margin {
+    bool _long;
+    bool _short;
+};
 struct Capabilities {
-    bool spot;
-    bool margin;
+    bool   spot;
+    Margin margin;
 };
 struct Fees {
     double transaction;

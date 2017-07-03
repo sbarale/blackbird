@@ -155,6 +155,5 @@ std::vector<std::string> makeVector(std::string values) {
     std::istream_iterator<std::string> end;
     std::vector<std::string>           vstrings(begin, end);
     return vstrings;
-    //std::copy(vstrings.begin(), vstrings.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
 }
 

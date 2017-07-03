@@ -546,7 +546,7 @@ void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<
         AbstractExchange *e = ExchangeFactory::make(params.exchanges[i]);
         if (e->config.enabled && e->canTrade(params.tradedPair())) {
             pool.push_back(e);
-            params.addExchange(params.exchanges[i], e->config.fees.transaction, true, true);
+            params.addExchange(params.exchanges[i], e->config.fees.transaction, e->config.capabilities.margin._short, true);
             dbTableName[index] = e->exchange_name;
             createTable(dbTableName[index], params);
             index++;
