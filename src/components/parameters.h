@@ -54,7 +54,7 @@ struct Parameters {
     bool                     useVolatility;
     unsigned                 volatilityPeriod;
     std::string              cacert;
-    
+
     std::vector<std::string> exchanges;
     bool                     sendEmail;
     std::string              senderAddress;
