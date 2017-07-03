@@ -28,7 +28,7 @@ void int_handler(int s) {
     interrupted = true;
 }
 
-void loadSymbols(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
+void loadSymbols(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &symbols);
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile);
 void writeBalances(const Parameters &params, ofstream &logFile, int numExch, const vector<Balance, allocator<Balance>> &balance, bool inMarket);
 void verifyParameters(Parameters &params);
@@ -689,10 +689,10 @@ void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange
     }
 }
 
-void loadSymbols(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges) {
-    exchanges.reserve(numExch);
+void loadSymbols(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &symbols) {
+    symbols.reserve(numExch);
     // Creates a new Symbol structure within exchanges for every exchange we want to trade on
     for (int i = 0; i < numExch; ++i) {
-        exchanges.push_back(Symbol(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
+        symbols.push_back(Symbol(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));
     }
 }
