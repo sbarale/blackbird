@@ -9,11 +9,13 @@ void ExchangeParameters::load(string filename) {
         exit(EXIT_FAILURE);
     }
 
-    api.auth.client_id = getParameter("api.client_id", configFile);
-    api.auth.key       = getParameter("api.key", configFile);
-    api.auth.secret    = getParameter("api.secret", configFile);
+    api.auth.client_id  = getParameter("api.client_id", configFile);
+    api.auth.key        = getParameter("api.key", configFile);
+    api.auth.secret     = getParameter("api.secret", configFile);
 
-    fees.transaction   = getDouble(getParameter("fee.transaction", configFile));
+    fees.transaction    = getDouble(getParameter("fee.transaction", configFile));
+    capabilities.spot   = getBool(getParameter("capabilities.spot", configFile));
+    capabilities.margin = getBool(getParameter("capabilities.margin", configFile));
     enabled = getBool(getParameter("enabled", configFile));
 
 }

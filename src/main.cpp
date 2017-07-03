@@ -28,7 +28,7 @@ void int_handler(int s) {
     interrupted = true;
 }
 
-void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
+void loadSymbols(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges);
 void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, vector<Symbol, allocator<Symbol>> &symbol, time_t currTime, Parameters &params, ofstream &logFile);
 void writeBalances(const Parameters &params, ofstream &logFile, int numExch, const vector<Balance, allocator<Balance>> &balance, bool inMarket);
 void verifyParameters(Parameters &params);
@@ -103,10 +103,10 @@ int main(int argc, char **argv) {
 
     int                 numExch = params.nbExch();
 
-    // The exchanges vector contains details about every exchange,
+    // The symbols vector contains details about every coin/currency on every exchange,
     // like fees, as specified in exchanges.h
-    std::vector<Symbol> symbol;
-    loadExchanges(params, numExch, symbol);
+    std::vector<Symbol> symbols;
+    loadSymbols(params, numExch, symbols);
 
     // Inits cURL connections
     params.curl            = curl_easy_init();
@@ -152,15 +152,15 @@ int main(int argc, char **argv) {
     // Main analysis loop
     while (stillRunning && !interrupted) {
         checkTimeslot(params, res, inMarket, rawtime, diffTime, logFile, timeinfo, currTime);
-        getBidAndAskPrices(dbTableName, pool, numExch, symbol, currTime, params, logFile);
-        computeVolatility(params, numExch, symbol, res);
+        getBidAndAskPrices(dbTableName, pool, numExch, symbols, currTime, params, logFile);
+        computeVolatility(params, numExch, symbols, res);
 
         // Looks for arbitrage opportunities on all the exchange combinations
         if (!inMarket) {
             for (int i = 0; i < numExch; ++i) {
                 for (int j = 0; j < numExch; ++j) {
                     if (i != j) {
-                        if (checkEntry(&symbol[i], &symbol[j], res, params)) {
+                        if (checkEntry(&symbols[i], &symbols[j], res, params)) {
 
                             double volumeLong;
                             double volumeShort;
@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
                             if (!shouldContinue)
                                 break;
 
-                            shouldContinue = computeLimitPricesBasedOnVolume(pool, symbol, resultId, currTime, params, logFile, res, inMarket, volumeLong, volumeShort, limPriceLong, limPriceShort, longOrderId, shortOrderId);
+                            shouldContinue = computeLimitPricesBasedOnVolume(pool, symbols, resultId, currTime, params, logFile, res, inMarket, volumeLong, volumeShort, limPriceLong, limPriceShort, longOrderId, shortOrderId);
                             if (!shouldContinue)
                                 break;
 
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
             }
         } else if (inMarket) {
             // We are in market and looking for an exit opportunity
-            if (checkExit(&symbol[res.idExchLong], &symbol[res.idExchShort], res, params, currTime)) {
+            if (checkExit(&symbols[res.idExchLong], &symbols[res.idExchShort], res, params, currTime)) {
                 // An exit opportunity has been found!
                 // We check the current leg1 exposure
                 std::vector<double> btcUsed(numExch);
@@ -685,7 +685,7 @@ void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange
     }
 }
 
-void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges) {
+void loadSymbols(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges) {
     exchanges.reserve(numExch);
     // Creates a new Symbol structure within exchanges for every exchange we want to trade on
     for (int i = 0; i < numExch; ++i) {

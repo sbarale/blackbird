@@ -53,7 +53,7 @@ double Bitstamp::getAvail(Parameters &params, std::string currency) {
 }
 
 std::string Bitstamp::sendLongOrder(Parameters &params, std::string direction, double quantity, double price) {
-    *params.logFile << "<Bitstamp> Trying to send a \"" << direction << "\" limit order: "
+    *params.logFile << exchange_name << " Trying to send a \"" << direction << "\" limit order: "
                     << std::setprecision(6) << quantity << "@$"
                     << std::setprecision(2) << price << "...\n";
     std::ostringstream oss;
@@ -67,10 +67,10 @@ std::string Bitstamp::sendLongOrder(Parameters &params, std::string direction, d
     auto        orderId = std::to_string(json_integer_value(json_object_get(root.get(), "id")));
     if (orderId == "0") {
         auto dump = json_dumps(root.get(), 0);
-        *params.logFile << "<Bitstamp> Order ID = 0. Message: " << dump << '\n';
+        *params.logFile << exchange_name << " Order ID = 0. Message: " << dump << '\n';
         free(dump);
     }
-    *params.logFile << "<Bitstamp> Done (order ID: " << orderId << ")\n" << std::endl;
+    *params.logFile << exchange_name << " Done (order ID: " << orderId << ")\n" << std::endl;
 
     return orderId;
 }
@@ -95,7 +95,7 @@ double Bitstamp::getLimitPrice(Parameters &params, double volume, bool isBid) {
     auto        orderbook = json_object_get(root.get(), isBid ? "bids" : "asks");
 
     // loop on volume
-    *params.logFile << "<Bitstamp> Looking for a limit price to fill "
+    *params.logFile << exchange_name << "Looking for a limit price to fill "
                     << std::setprecision(6) << fabs(volume) << " BTC...\n";
     double tmpVol = 0.0;
     double p      = 0.0;
@@ -104,7 +104,7 @@ double Bitstamp::getLimitPrice(Parameters &params, double volume, bool isBid) {
     while (tmpVol < fabs(volume) * params.orderBookFactor) {
         p = atof(json_string_value(json_array_get(json_array_get(orderbook, i), 0)));
         v = atof(json_string_value(json_array_get(json_array_get(orderbook, i), 1)));
-        *params.logFile << "<Bitstamp> order book: "
+        *params.logFile << exchange_name << " order book: "
                         << std::setprecision(6) << v << "@$"
                         << std::setprecision(2) << p << std::endl;
         tmpVol += v;
@@ -142,7 +142,7 @@ json_t *Bitstamp::authRequest(Parameters &params, std::string url, std::string o
         using secs = std::chrono::seconds;
 
         while (resCurl != CURLE_OK) {
-            *params.logFile << "<Bitstamp> Error with cURL. Retry in 2 sec..." << std::endl;
+            *params.logFile << exchange_name << " Error with cURL. Retry in 2 sec..." << std::endl;
             sleep_for(secs(2));
             readBuffer = "";
             resCurl    = curl_easy_perform(params.curl);
@@ -150,14 +150,14 @@ json_t *Bitstamp::authRequest(Parameters &params, std::string url, std::string o
         json_error_t error;
         json_t       *root = json_loads(readBuffer.c_str(), 0, &error);
         while (!root) {
-            *params.logFile << "<Bitstamp> Error with JSON:\n" << error.text << '\n'
-                            << "<Bitstamp> Buffer:\n" << readBuffer << '\n'
-                            << "<Bitstamp> Retrying..." << std::endl;
+            *params.logFile << exchange_name << " Error with JSON:\n" << error.text << '\n'
+                            << exchange_name << " Buffer:\n" << readBuffer << '\n'
+                            << exchange_name << " Retrying..." << std::endl;
             sleep_for(secs(2));
             readBuffer = "";
             resCurl    = curl_easy_perform(params.curl);
             while (resCurl != CURLE_OK) {
-                *params.logFile << "<Bitstamp> Error with cURL. Retry in 2 sec..." << std::endl;
+                *params.logFile << exchange_name << " Error with cURL. Retry in 2 sec..." << std::endl;
                 sleep_for(secs(2));
                 readBuffer = "";
                 resCurl    = curl_easy_perform(params.curl);
@@ -167,7 +167,7 @@ json_t *Bitstamp::authRequest(Parameters &params, std::string url, std::string o
         curl_easy_reset(params.curl);
         return root;
     } else {
-        *params.logFile << "<Bitstamp> Error with cURL init." << std::endl;
+        *params.logFile << exchange_name << " Error with cURL init." << std::endl;
         return NULL;
     }
 }

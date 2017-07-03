@@ -5,6 +5,7 @@
 #include "../exchanges/bitfinex.h"
 #include "../exchanges/bitstamp.h"
 #include "../exchanges/btce.h"
+#include "../exchanges/okcoin.h"
 
 class ExchangeFactory {
   public:
@@ -15,6 +16,8 @@ class ExchangeFactory {
             return new Bitstamp;
         } else if (of_type == "BTCe") {
             return new BTCe;
+        } else if (of_type == "OKCoin") {
+            return new OKCoin;
         } else {
             std::cout << "Exchange " << of_type << " not defined!" << std::endl;
             exit(1);

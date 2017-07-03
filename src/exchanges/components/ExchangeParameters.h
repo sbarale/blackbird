@@ -4,6 +4,10 @@
 #include "ApiParameters.h"
 #include <iostream>
 
+struct Capabilities {
+    bool spot;
+    bool margin;
+};
 struct Fees {
     double transaction;
     double withdraw;
@@ -15,7 +19,7 @@ class ExchangeParameters {
     Fees          fees;
     ApiParameters api;
     bool          enabled;
-
+    Capabilities  capabilities;
     void load(std::string filename = "");
 
   protected:
