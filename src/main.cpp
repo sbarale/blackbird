@@ -40,8 +40,9 @@ void updateBalances(const vector<AbstractExchange *, allocator<AbstractExchange 
 void computeVolatility(Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &symbol, Result &res);
 void sendOrdersAndWaitForCompletion(const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, const Result &res, double volumeLong, double volumeShort, double limPriceLong, double limPriceShort, Parameters &params, ofstream &logFile, string &longOrderId, string &shortOrderId);
 void calculatePositions(const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, int numExch, time_t currTime, const vector<double, allocator<double>> &btcUsed, double volumeLong, double volumeShort, double limPriceLong, double limPriceShort, Parameters &params, ofstream &csvFile, ofstream &logFile, vector<Balance, allocator<Balance>> &balance, Result &res, bool &inMarket);
-bool analyzeOpportinity(const Parameters &params, ofstream &logFile, Result &res);
+bool analyzeOpportunity(const Parameters &params, ofstream &logFile, Result &res);
 bool computeLimitPricesBasedOnVolume(const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, const vector<Symbol, allocator<Symbol>> &symbol, int resultId, time_t currTime, Parameters &params, ofstream &logFile, Result &res, bool &inMarket, double &volumeLong, double &volumeShort, double &limPriceLong, double &limPriceShort, string &longOrderId, string &shortOrderId);
+void showSpreads(const Parameters &params, ofstream &logFile);
 
 // 'main' function.
 int main(int argc, char **argv) {
@@ -110,21 +111,7 @@ int main(int argc, char **argv) {
 
     // Inits cURL connections
     params.curl            = curl_easy_init();
-    // Shows the spreads
-    logFile << "[ Targets ]" << std::endl
-            << std::setprecision(2)
-            << "   Spread Entry:  " << params.spreadEntry * 100.0 << "%" << std::endl
-            << "   Spread Target: " << params.spreadTarget * 100.0 << "%" << std::endl;
-
-    // SpreadEntry and SpreadTarget have to be positive,
-    // Otherwise we will loose money on every trade.
-    if (params.spreadEntry <= 0.0) {
-        logFile << "   WARNING: Spread Entry should be positive" << std::endl;
-    }
-    if (params.spreadTarget <= 0.0) {
-        logFile << "   WARNING: Spread Target should be positive" << std::endl;
-    }
-    logFile << std::endl;
+    showSpreads(params, logFile);
 
     logFile << "[ Current balances ]" << std::endl;
     // Gets the the balances from every exchange
@@ -173,7 +160,7 @@ int main(int argc, char **argv) {
                             // An entry opportunity has been found!
                             res.exposure = std::min(balance[res.idExchLong].leg2, balance[res.idExchShort].leg2);
 
-                            shouldContinue = analyzeOpportinity(params, logFile, res);
+                            shouldContinue = analyzeOpportunity(params, logFile, res);
                             if (!shouldContinue)
                                 break;
 
@@ -251,6 +238,23 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+void showSpreads(const Parameters &params, ofstream &logFile) {// Shows the spreads
+    logFile << "[ Targets ]" << endl
+            << setprecision(2)
+            << "   Spread Entry:  " << params.spreadEntry * 100.0 << "%" << endl
+            << "   Spread Target: " << params.spreadTarget * 100.0 << "%" << endl;
+
+    // SpreadEntry and SpreadTarget have to be positive,
+    // Otherwise we will loose money on every trade.
+    if (params.spreadEntry <= 0.0) {
+        logFile << "   WARNING: Spread Entry should be positive" << endl;
+    }
+    if (params.spreadTarget <= 0.0) {
+        logFile << "   WARNING: Spread Target should be positive" << endl;
+    }
+    logFile << endl;
+}
+
 bool computeLimitPricesBasedOnVolume(const vector<AbstractExchange *, allocator<AbstractExchange *>> &pool, const vector<Symbol, allocator<Symbol>> &symbol, int resultId, time_t currTime, Parameters &params, ofstream &logFile, Result &res, bool &inMarket, double &volumeLong, double &volumeShort, double &limPriceLong, double &limPriceShort, string &longOrderId, string &shortOrderId) {
     volumeLong    = res.exposure / symbol[res.idExchLong].getAsk();
     volumeShort   = res.exposure / symbol[res.idExchShort].getBid();
@@ -294,7 +298,7 @@ bool computeLimitPricesBasedOnVolume(const vector<AbstractExchange *, allocator<
     return true;
 }
 
-bool analyzeOpportinity(const Parameters &params, ofstream &logFile, Result &res) {
+bool analyzeOpportunity(const Parameters &params, ofstream &logFile, Result &res) {
     if (params.demoMode) {
         logFile << "INFO: Opportunity found but no trade will be generated (Demo mode)"
                 << endl;
