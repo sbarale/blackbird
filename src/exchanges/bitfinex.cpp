@@ -13,6 +13,7 @@ Bitfinex::Bitfinex() {
     config.api.endpoint.quote         = "/v1/ticker/";
     config.api.endpoint.positions     = "/v1/positions";
 
+    trading_pairs.push_back("BTC/USD");
     loadConfig();
 }
 

@@ -23,6 +23,7 @@ Bitstamp::Bitstamp() {
     config.api.endpoint.order.status  = "/api/order_status/";
     config.api.endpoint.quote         = "/api/ticker/";
 
+    trading_pairs.push_back("BTC/USD");
     loadConfig();
 
 }

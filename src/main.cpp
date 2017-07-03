@@ -241,7 +241,6 @@ int main(int argc, char **argv) {
     // Analysis loop exited, does some cleanup
 
     for (int i             = 0; i < pool.size(); i++) {
-        std::cout << "Deleting " << pool[i]->exchange_name << " instance." << std::endl;
         delete (pool[i]);
     }
 
@@ -538,16 +537,18 @@ void logCashExposure(Parameters &params, ofstream &logFile) {
 }
 
 void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<AbstractExchange *, allocator<AbstractExchange *>> &pool) {// Adds the exchange functions to the arrays for all the defined exchanges
-    // TODO: Limit the exchanges according to the pair being traded
     int      index = 0;
     for (int i     = 0; i < params.exchanges.size(); ++i) {
         AbstractExchange *e = ExchangeFactory::make(params.exchanges[i]);
-        if (e->config.enabled) {
+        if (e->config.enabled && e->canTrade(params.tradedPair())) {
             pool.push_back(e);
             params.addExchange(params.exchanges[i], e->config.fees.transaction, true, true);
             dbTableName[index] = e->exchange_name;
             createTable(dbTableName[index], params);
             index++;
+        } else {
+            std::cout << "Exchange " << e->exchange_name << " disabled or cannot trade current pair ("
+                      << params.tradedPair() << ")" << std::endl;
         }
     }
 
