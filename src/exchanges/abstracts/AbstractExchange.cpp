@@ -91,7 +91,7 @@ double AbstractExchange::getActivePos(Parameters &params) {
     unique_json root{authRequest(params, config.api.endpoint.positions, "")};
     double      position;
     if (json_array_size(root.get()) == 0) {
-        *params.logFile << "<Bitfinex> WARNING: BTC position not available, return 0.0" << std::endl;
+        *params.logFile << exchange_name << " WARNING: BTC position not available, return 0.0" << std::endl;
         position = 0.0;
     } else {
         position = atof(json_string_value(json_object_get(json_array_get(root.get(), 0), "amount")));
@@ -173,7 +173,9 @@ json_t *AbstractExchange::checkResponse(std::ostream &logFile, json_t *root) {
     }
     return root;
 }
-
+/*
+ * Checks if a given trading pair is available in the exchange
+ */
 bool AbstractExchange::canTrade(std::string pair) {
     return std::find(trading_pairs.begin(), trading_pairs.end(), pair) != trading_pairs.end();
 }
