@@ -182,5 +182,5 @@ void AbstractExchange::loadConfig() {
     std::string name = exchange_name;
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
     std::cout << "Loading file: " << "config/" << name << std::endl;
-    config.load("config/" + name + ".ini");
+    config.load(name + ".ini");
 }

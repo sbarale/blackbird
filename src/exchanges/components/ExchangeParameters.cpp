@@ -2,13 +2,22 @@
 #include <fstream>
 
 void ExchangeParameters::load(string filename) {
-    std::ifstream configFile(filename);
+    std::string   secret = "config/secret/" + filename;
+    std::string   base   = "config/" + filename;
+    std::ifstream secretFile(secret);
+    std::ifstream baseFile(base);
+    std::ifstream configFile;
 
-    if (!configFile.is_open()) {
-        std::cout << "ERROR: " << filename << " cannot be open.\n";
-        exit(EXIT_FAILURE);
+    if (secretFile.good()) {
+        std::cout << "Secret file for " << filename << " exists. Overloading" << std::endl;
+        configFile.open(secret);
+    } else {
+        configFile.open(base);
+        if (!configFile.is_open()) {
+            std::cout << "ERROR: " << filename << " cannot be open.\n";
+            exit(EXIT_FAILURE);
+        }
     }
-
     api.auth.client_id         = getParameter("api.client_id", configFile);
     api.auth.key               = getParameter("api.key", configFile);
     api.auth.secret            = getParameter("api.secret", configFile);
@@ -19,7 +28,8 @@ void ExchangeParameters::load(string filename) {
     capabilities.margin._long  = getBool(getParameter("capabilities.margin.long", configFile));
 
     enabled = getBool(getParameter("enabled", configFile));
-
+    secretFile.close();
+    baseFile.close();
 }
 
 std::string ExchangeParameters::getParameter(std::string parameter, std::ifstream &configFile) {
