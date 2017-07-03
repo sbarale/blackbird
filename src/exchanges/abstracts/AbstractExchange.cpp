@@ -173,8 +173,12 @@ json_t *AbstractExchange::checkResponse(std::ostream &logFile, json_t *root) {
     }
     return root;
 }
-/*
+/**
+ *
  * Checks if a given trading pair is available in the exchange
+ *
+ * @param pair
+ * @return
  */
 bool AbstractExchange::canTrade(std::string pair) {
     return std::find(trading_pairs.begin(), trading_pairs.end(), pair) != trading_pairs.end();
