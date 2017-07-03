@@ -31,6 +31,7 @@ class AbstractExchange {
     virtual std::string sendLongOrder(Parameters &params, std::string direction, double quantity, double price);
     virtual std::string sendShortOrder(Parameters &params, std::string direction, double quantity, double price);
     virtual std::string sendOrder(Parameters &params, std::string direction, double quantity, double price);
+    virtual void loadConfig();
 };
 
 #endif //BLACKBIRD_ABSTRACTEXCHANGE_H

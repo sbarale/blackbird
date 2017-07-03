@@ -14,6 +14,8 @@
 #include "utils/utils.h"
 #include <unistd.h>
 #include <cmath>
+#include "exchanges/btce.h"
+#include "utils/ExchangeFactory.h"
 
 using std::this_thread::sleep_for;
 using millisecs = std::chrono::milliseconds;
@@ -40,9 +42,9 @@ int main(int argc, char **argv) {
     std::cout << "Blackbird Bitcoin Arbitrage" << std::endl;
     std::cout << "DISCLAIMER: USE THE SOFTWARE AT YOUR OWN RISK\n" << std::endl;
     // Replaces the C++ global locale with the user-preferred locale
-    std::locale mylocale("");
+    std::locale                     mylocale("");
     // Loads all the parameters
-    Parameters  params("blackbird.conf");
+    Parameters                      params("blackbird.conf");
 
     // Function arrays containing all the exchanges functions
     // using the 'typedef' declarations from above.
@@ -158,10 +160,12 @@ int main(int argc, char **argv) {
                             res.exposure = std::min(balance[res.idExchLong].leg2, balance[res.idExchShort].leg2);
 
                             shouldContinue = analyzeOpportinity(params, logFile, res);
-                            if (!shouldContinue) break;
+                            if (!shouldContinue)
+                                break;
 
                             shouldContinue = computeLimitPricesBasedOnVolume(pool, symbol, resultId, currTime, params, logFile, res, inMarket, volumeLong, volumeShort, limPriceLong, limPriceShort, longOrderId, shortOrderId);
-                            if (!shouldContinue) break;
+                            if (!shouldContinue)
+                                break;
 
                             sendOrdersAndWaitForCompletion(pool, res, volumeLong, volumeShort, limPriceLong, limPriceShort, params, logFile, longOrderId, shortOrderId);
 
@@ -201,7 +205,7 @@ int main(int argc, char **argv) {
                 calculatePositions(pool, numExch, currTime, btcUsed, volumeLong, volumeShort, limPriceLong, limPriceShort, params, csvFile, logFile, balance, res, inMarket);
             }
             if (params.verbose)
-                logFile << '\n';
+                logFile << std::endl;
         }
         // Moves to the next iteration, unless
         // the maxmum is reached.
@@ -518,33 +522,56 @@ void loadExchangesConfiguration(Parameters &params, string *dbTableName, vector<
     // deal with USD.
     // TODO: should be in a separated function, and there probably is a better
     // way to implement that.
-
-    int index = 0;
-    if (params.bitfinexEnable &&
-        (params.bitfinexApi.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("Bitfinex", params.bitfinexFees, true, true);
-
-        pool.push_back(new Bitfinex);
-
-        // TODO: All this is irrelevant. Use directly function calls in the loop
-        dbTableName[index] = "bitfinex";
-        createTable(dbTableName[index], params);
-
-        index++;
+    int      index = 0;
+    for (int i     = 0; i < params.exchanges.size(); ++i) {
+        AbstractExchange* e = ExchangeFactory::make(params.exchanges[i]);
+        if(e->config.enabled){
+            pool.push_back(e);
+            params.addExchange(params.exchanges[i], e->config.fees.transaction, true, true);
+            dbTableName[index] = e->exchange_name;
+            createTable(dbTableName[index], params);
+            index++;
+        }
     }
+    //
+    //;
+    //if (params.bitfinexEnable &&
+    //    (params.bitfinexApi.empty() == false ||
+    //     (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
+    //    params.addExchange("Bitfinex", params.bitfinexFees, true, true);
+    //
+    //    pool.push_back(new Bitfinex);
+    //
+    //    // TODO: All this is irrelevant. Use directly function calls in the loop
+    //    dbTableName[index] = "bitfinex";
+    //    createTable(dbTableName[index], params);
+    //
+    //    index++;
+    //}
+    //
+    //if (params.bitstampEnable &&
+    //    (params.bitstampClientId.empty() == false ||
+    //     (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
+    //    params.addExchange("Bitstamp", params.bitstampFees, false, true);
+    //
+    //    pool.push_back(new Bitstamp);
+    //    dbTableName[index] = "bitstamp";
+    //    createTable(dbTableName[index], params);
+    //
+    //    index++;
+    //}
+    //
+    //if (params.btceEnable &&
+    //    (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0)) {
+    //    params.addExchange("BTCE", params.btceFees, false, true);
+    //
+    //    pool.push_back(new BTCe());
+    //    dbTableName[index] = "btce";
+    //    createTable(dbTableName[index], params);
+    //
+    //    index++;
+    //}
 
-    if (params.bitstampEnable &&
-        (params.bitstampClientId.empty() == false ||
-         (params.demoMode == true && params.tradedPair().compare("BTC/USD") == 0))) {
-        params.addExchange("Bitstamp", params.bitstampFees, false, true);
-
-        pool.push_back(new Bitstamp);
-        dbTableName[index] = "bitstamp";
-        createTable(dbTableName[index], params);
-
-        index++;
-    }
 
     // We need at least two exchanges to run Blackbird
     if (index < 2) {
@@ -681,7 +708,7 @@ void getBidAndAskPrices(const string *dbTableName, const vector<AbstractExchange
 
 void loadExchanges(const Parameters &params, int numExch, vector<Symbol, allocator<Symbol>> &exchanges) {
     exchanges.reserve(numExch);
-    // Creates a new Bitcoin structure within exchanges for every exchange we want to trade on
+    // Creates a new Symbol structure within exchanges for every exchange we want to trade on
     for (int i = 0; i < numExch; ++i) {
         exchanges.push_back(
                 Symbol(i, params.exchName[i], params.fees[i], params.canShort[i], params.isImplemented[i]));

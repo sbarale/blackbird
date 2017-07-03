@@ -22,6 +22,9 @@ Bitstamp::Bitstamp() {
     config.api.endpoint.order.new_one = "/api/";
     config.api.endpoint.order.status  = "/api/order_status/";
     config.api.endpoint.quote         = "/api/ticker/";
+
+    loadConfig();
+
 }
 
 double Bitstamp::getAvail(Parameters &params, std::string currency) {
@@ -112,16 +115,16 @@ double Bitstamp::getLimitPrice(Parameters &params, double volume, bool isBid) {
 json_t *Bitstamp::authRequest(Parameters &params, std::string url, std::string options) {
     static uint64_t    nonce = time(nullptr) * 4;
     std::ostringstream oss;
-    oss << ++nonce << params.bitstampClientId << params.bitstampApi;
+    oss << ++nonce << config.api.auth.client_id << config.api.auth.key;
     unsigned char *digest;
-    digest                   = HMAC(EVP_sha256(), params.bitstampSecret.c_str(), params.bitstampSecret.size(), (unsigned char *) oss.str().data(), oss.str().size(), NULL, NULL);
+    digest                   = HMAC(EVP_sha256(), config.api.auth.secret.c_str(), config.api.auth.secret.size(), (unsigned char *) oss.str().data(), oss.str().size(), NULL, NULL);
     char     mdString[SHA256_DIGEST_LENGTH + 100];  // FIXME +100
     for (int i               = 0; i < SHA256_DIGEST_LENGTH; ++i) {
         sprintf(&mdString[i * 2], "%02X", (unsigned int) digest[i]);
     }
     oss.clear();
     oss.str("");
-    oss << "key=" << params.bitstampApi << "&signature=" << mdString << "&nonce=" << nonce << "&" << options;
+    oss << "key=" << config.api.auth.key << "&signature=" << mdString << "&nonce=" << nonce << "&" << options;
     std::string postParams = oss.str().c_str();
 
     if (params.curl) {

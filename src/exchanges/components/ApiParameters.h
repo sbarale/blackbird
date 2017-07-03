@@ -29,5 +29,6 @@ struct Endpoint {
 struct ApiParameters {
     string   url;
     Endpoint endpoint;
+    Auth     auth;
 };
 #endif //BLACKBIRD_APIPARAMETERS_H

@@ -1,6 +1,7 @@
 #include "parameters.h"
 
 #include <iostream>
+#include <sstream>
 #include <cassert>
 
 static std::string findConfigFile(std::string fileName) {
@@ -89,44 +90,7 @@ Parameters::Parameters(std::string fileName) {
     volatilityPeriod  = getUnsigned(getParameter("VolatilityPeriod", configFile));
     cacert            = getParameter("CACert", configFile);
 
-    bitfinexApi       = getParameter("BitfinexApiKey", configFile);
-    bitfinexSecret    = getParameter("BitfinexSecretKey", configFile);
-    bitfinexFees      = getDouble(getParameter("BitfinexFees", configFile));
-    bitfinexEnable    = getBool(getParameter("BitfinexEnable", configFile));
-    okcoinApi         = getParameter("OkCoinApiKey", configFile);
-    okcoinSecret      = getParameter("OkCoinSecretKey", configFile);
-    okcoinFees        = getDouble(getParameter("OkCoinFees", configFile));
-    okcoinEnable      = getBool(getParameter("OkCoinEnable", configFile));
-    bitstampClientId  = getParameter("BitstampClientId", configFile);
-    bitstampApi       = getParameter("BitstampApiKey", configFile);
-    bitstampSecret    = getParameter("BitstampSecretKey", configFile);
-    bitstampFees      = getDouble(getParameter("BitstampFees", configFile));
-    bitstampEnable    = getBool(getParameter("BitstampEnable", configFile));
-    geminiApi         = getParameter("GeminiApiKey", configFile);
-    geminiSecret      = getParameter("GeminiSecretKey", configFile);
-    geminiFees        = getDouble(getParameter("GeminiFees", configFile));
-    geminiEnable      = getBool(getParameter("GeminiEnable", configFile));
-    krakenApi         = getParameter("KrakenApiKey", configFile);
-    krakenSecret      = getParameter("KrakenSecretKey", configFile);
-    krakenFees        = getDouble(getParameter("KrakenFees", configFile));
-    krakenEnable      = getBool(getParameter("KrakenEnable", configFile));
-    itbitApi          = getParameter("ItBitApiKey", configFile);
-    itbitSecret       = getParameter("ItBitSecretKey", configFile);
-    itbitFees         = getDouble(getParameter("ItBitFees", configFile));
-    itbitEnable       = getBool(getParameter("ItBitEnable", configFile));
-    btceApi           = getParameter("BTCeApiKey", configFile);
-    btceSecret        = getParameter("BTCeSecretKey", configFile);
-    btceFees          = getDouble(getParameter("BTCeFees", configFile));
-    btceEnable        = getBool(getParameter("BTCeEnable", configFile));
-    poloniexApi       = getParameter("PoloniexApiKey", configFile);
-    poloniexSecret    = getParameter("PoloniexSecretKey", configFile);
-    poloniexFees      = getDouble(getParameter("PoloniexFees", configFile));
-    poloniexEnable    = getBool(getParameter("PoloniexEnable", configFile));
-    gdaxApi           = getParameter("GDAXApiKey", configFile);
-    gdaxSecret        = getParameter("GDAXSecretKey", configFile);
-    gdaxFees          = getDouble(getParameter("GDAXFees", configFile));
-    gdaxEnable        = getBool(getParameter("GDAXEnable", configFile));
-
+    exchanges         = makeVector(getParameter("Exchanges", configFile));
     sendEmail         = getBool(getParameter("SendEmail", configFile));
     senderAddress     = getParameter("SenderAddress", configFile);
     senderUsername    = getParameter("SenderUsername", configFile);
@@ -183,3 +147,14 @@ double getDouble(std::string value) {
 unsigned getUnsigned(std::string value) {
     return atoi(value.c_str());
 }
+
+std::vector<std::string> makeVector(std::string values) {
+    std::stringstream ss(values);
+    ss.imbue(std::locale(std::locale(), new tokens()));
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    std::vector<std::string>           vstrings(begin, end);
+    return vstrings;
+    //std::copy(vstrings.begin(), vstrings.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
+}
+

@@ -6,13 +6,12 @@
 class Bitstamp : public AbstractExchange {
   public:
     Bitstamp();
-    json_t *authRequest(Parameters &params, std::__1::string request, std::__1::string options);
+    json_t *authRequest(Parameters &params, std::string request, std::string options);
     double getActivePos(Parameters &params);
-    double getAvail(Parameters &params, std::__1::string currency);
+    double getAvail(Parameters &params, std::string currency);
     double getLimitPrice(Parameters &params, double volume, bool isBid);
-    bool isOrderComplete(Parameters &params, std::__1::string orderId);
-    std::__1::string
-    sendLongOrder(Parameters &params, std::__1::string direction, double quantity, double price);
+    bool isOrderComplete(Parameters &params, std::string orderId);
+    std::string sendLongOrder(Parameters &params, std::string direction, double quantity, double price);
 };
 
 #endif //BITSTAMP_H

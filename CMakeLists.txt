@@ -17,7 +17,7 @@ file(GLOB SOURCES
         src/exchanges/abstracts/*.cpp
         src/exchanges/components/*.cpp
         src/utils/*.cpp)
-add_executable(${PROJECT_NAME} ${SOURCES} src/exchanges/components/ApiParameters.h src/exchanges/components/ExchangeParameters.h)
+add_executable(${PROJECT_NAME} ${SOURCES} src/exchanges/components/ApiParameters.h src/exchanges/components/ExchangeParameters.h src/exchanges/components/ExchangeParameters.cpp src/utils/ExchangeFactory.h)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
         "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")

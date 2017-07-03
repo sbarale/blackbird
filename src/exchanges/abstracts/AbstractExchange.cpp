@@ -5,6 +5,7 @@
 #include "utils/restapi.h"
 #include "components/parameters.h"
 #include "AbstractExchange.h"
+#include <iomanip>
 
 /*
  * TODO: This is NOT PROPER CODE STRUCTURE. This is temporary to go through the
@@ -19,18 +20,6 @@ AbstractExchange::AbstractExchange() {
 
 AbstractExchange::~AbstractExchange() {
 
-}
-
-quote_t AbstractExchange::getQuote(Parameters &params) {
-    auto        exchange = queryHandle(params);
-    unique_json root{exchange.getRequest(config.api.endpoint.quote)};
-    const char  *quote   = json_string_value(json_object_get(root.get(), "bid"));
-    auto        bidValue = quote ? atof(quote) : 0.0;
-
-    quote = json_string_value(json_object_get(root.get(), "ask"));
-    auto askValue = quote ? atof(quote) : 0.0;
-
-    return std::make_pair(bidValue, askValue);
 }
 
 double AbstractExchange::getAvail(Parameters &params, std::string currency) {
@@ -54,6 +43,18 @@ double AbstractExchange::getAvail(Parameters &params, std::string currency) {
         }
     }
     return availability;
+}
+
+quote_t AbstractExchange::getQuote(Parameters &params) {
+    auto        exchange = queryHandle(params);
+    unique_json root{exchange.getRequest(config.api.endpoint.quote)};
+    const char  *quote   = json_string_value(json_object_get(root.get(), "bid"));
+    auto        bidValue = quote ? atof(quote) : 0.0;
+
+    quote                = json_string_value(json_object_get(root.get(), "ask"));
+    auto askValue = quote ? atof(quote) : 0.0;
+
+    return std::make_pair(bidValue, askValue);
 }
 
 std::string AbstractExchange::sendLongOrder(Parameters &params, std::string direction, double quantity, double price) {
@@ -141,12 +142,12 @@ json_t *AbstractExchange::authRequest(Parameters &params, std::string request, s
 
     // signature
     uint8_t          *digest  = HMAC(EVP_sha384(),
-                                     params.bitfinexSecret.c_str(), params.bitfinexSecret.length(),
+                                     config.api.auth.secret.c_str(), config.api.auth.secret.length(),
                                      reinterpret_cast<const uint8_t *> (payload.data()), payload.size(),
                                      NULL, NULL);
     array<string, 3> headers
                              {
-                                     "X-BFX-APIKEY:" + params.bitfinexApi,
+                                     "X-BFX-APIKEY:" + config.api.auth.key,
                                      "X-BFX-SIGNATURE:" + hex_str(digest, digest + SHA384_DIGEST_LENGTH),
                                      "X-BFX-PAYLOAD:" + payload,
                              };
@@ -172,4 +173,11 @@ json_t *AbstractExchange::checkResponse(std::ostream &logFile, json_t *root) {
                 << json_string_value(msg) << '\n';
     }
     return root;
+}
+
+void AbstractExchange::loadConfig() {
+    std::string name = exchange_name;
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+    std::cout << "Loading file: " << "config/" << name << std::endl;
+    config.load("config/" + name + ".ini");
 }

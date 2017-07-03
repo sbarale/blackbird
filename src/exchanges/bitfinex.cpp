@@ -13,6 +13,7 @@ Bitfinex::Bitfinex() {
     config.api.endpoint.quote         = "/v1/ticker/";
     config.api.endpoint.positions     = "/v1/positions";
 
+    loadConfig();
 }
 
 quote_t Bitfinex::getQuote(Parameters &params) {
