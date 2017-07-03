@@ -8,7 +8,6 @@
 #include <cassert>
 
 BTCe::BTCe() {
-    //std::cout << "Init Bitfinex" << std::endl;
     exchange_name = "BTCe";
     config.api.url                    = "https://btc-e.com";
     config.api.endpoint.auth          = "";

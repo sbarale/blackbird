@@ -16,9 +16,7 @@ class AbstractExchange {
     AbstractExchange();
     ~AbstractExchange();
 
-    std::string getName() {
-        return exchange_name;
-    }
+    std::vector<std::string> trading_pairs;
 
     virtual RestApi queryHandle(Parameters &params);
     virtual json_t *checkResponse(std::ostream &logFile, json_t *root);
@@ -31,6 +29,7 @@ class AbstractExchange {
     virtual std::string sendLongOrder(Parameters &params, std::string direction, double quantity, double price);
     virtual std::string sendShortOrder(Parameters &params, std::string direction, double quantity, double price);
     virtual std::string sendOrder(Parameters &params, std::string direction, double quantity, double price);
+    virtual bool canTrade(std::string pair);
     virtual void loadConfig();
 };
 

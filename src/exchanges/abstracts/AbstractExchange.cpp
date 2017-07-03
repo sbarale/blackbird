@@ -19,7 +19,7 @@ AbstractExchange::AbstractExchange() {
 }
 
 AbstractExchange::~AbstractExchange() {
-
+    std::cout << "Destroying " << exchange_name << " instance." << std::endl;
 }
 
 double AbstractExchange::getAvail(Parameters &params, std::string currency) {
@@ -35,8 +35,7 @@ double AbstractExchange::getAvail(Parameters &params, std::string currency) {
                                                   "currency", &each_currency,
                                                   "amount", &each_amount);
         if (unpack_fail) {
-            *params.logFile << "<Bitfinex> Error with JSON: "
-                            << err.text << std::endl;
+            *params.logFile << exchange_name << " Error with JSON: " << err.text << std::endl;
         } else if (each_type == std::string("trading") && each_currency == currency) {
             availability = std::stod(each_amount);
             break;
@@ -66,7 +65,7 @@ std::string AbstractExchange::sendShortOrder(Parameters &params, std::string dir
 }
 
 std::string AbstractExchange::sendOrder(Parameters &params, std::string direction, double quantity, double price) {
-    *params.logFile << "<Bitfinex> Trying to send a \"" << direction << "\" limit order: "
+    *params.logFile << exchange_name << " Trying to send a \"" << direction << "\" limit order: "
                     << std::setprecision(6) << quantity << "@$"
                     << std::setprecision(2) << price << "...\n";
     std::ostringstream oss;
@@ -75,7 +74,7 @@ std::string AbstractExchange::sendOrder(Parameters &params, std::string directio
     std::string options = oss.str();
     unique_json root{authRequest(params, config.api.endpoint.order.new_one, options)};
     auto        orderId = std::to_string(json_integer_value(json_object_get(root.get(), "order_id")));
-    *params.logFile << "<Bitfinex> Done (order ID: " << orderId << ")\n" << std::endl;
+    *params.logFile << exchange_name << " Done (order ID: " << orderId << ")\n" << std::endl;
     return orderId;
 }
 
@@ -105,7 +104,7 @@ double AbstractExchange::getLimitPrice(Parameters &params, double volume, bool i
     unique_json root{exchange.getRequest(config.api.endpoint.order.book + "btcusd")};
     json_t      *bidask  = json_object_get(root.get(), isBid ? "bids" : "asks");
 
-    *params.logFile << "<Bitfinex> Looking for a limit price to fill "
+    *params.logFile << exchange_name << " Looking for a limit price to fill "
                     << std::setprecision(6) << fabs(volume) << " BTC...\n";
     double   tmpVol = 0.0;
     double   p      = 0.0;
@@ -115,7 +114,7 @@ double AbstractExchange::getLimitPrice(Parameters &params, double volume, bool i
     for (int i      = 0, n = json_array_size(bidask); i < n; ++i) {
         p = atof(json_string_value(json_object_get(json_array_get(bidask, i), "price")));
         v = atof(json_string_value(json_object_get(json_array_get(bidask, i), "amount")));
-        *params.logFile << "<Bitfinex> order book: "
+        *params.logFile << exchange_name << " order book: "
                         << std::setprecision(6) << v << "@$"
                         << std::setprecision(2) << p << std::endl;
         tmpVol += v;
@@ -173,6 +172,10 @@ json_t *AbstractExchange::checkResponse(std::ostream &logFile, json_t *root) {
                 << json_string_value(msg) << '\n';
     }
     return root;
+}
+
+bool AbstractExchange::canTrade(std::string pair) {
+    return std::find(trading_pairs.begin(), trading_pairs.end(), pair) != trading_pairs.end();
 }
 
 void AbstractExchange::loadConfig() {
