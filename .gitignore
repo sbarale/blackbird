@@ -16,3 +16,4 @@ cmake_install.cmake
 cotire/
 blackbird.cbp
 Makefile
+CMakeLists.txt
